@@ -1,0 +1,13 @@
+<section class="toast-stack" aria-live="polite" aria-atomic="true">
+  @if (toasts$ | async; as toasts) {
+    @for (toast of toasts; track toast.id) {
+      <article class="toast" [class.error]="toast.type === 'error'" [class.info]="toast.type === 'info'">
+        <span class="material-symbol icon">{{ iconFor(toast) }}</span>
+        <p>{{ toast.message }}</p>
+        <button type="button" class="dismiss-btn" aria-label="Cerrar aviso" (click)="dismiss(toast.id)">
+          <span class="material-symbol">close</span>
+        </button>
+      </article>
+    }
+  }
+</section>

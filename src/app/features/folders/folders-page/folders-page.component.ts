@@ -2,8 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { combineLatest, map } from 'rxjs';
 import { GymFolder } from '../../../core/models';
 import { FolderService } from '../../../core/services/folder.service';
+import { RoutineService } from '../../../core/services/routine.service';
+import { UiToastService } from '../../../core/services/ui-toast.service';
 
 @Component({
   selector: 'app-folders-page',
@@ -15,12 +18,31 @@ import { FolderService } from '../../../core/services/folder.service';
 export class FoldersPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly folderService = inject(FolderService);
+  private readonly routineService = inject(RoutineService);
+  private readonly toast = inject(UiToastService);
 
-  protected readonly folders$ = this.folderService.folders$;
+  protected readonly folders$ = combineLatest([
+    this.folderService.folders$,
+    this.routineService.routines$
+  ]).pipe(
+    map(([folders, routines]) => {
+      const routinesPerFolder = new Map<string, number>();
+      routines.forEach((routine) => {
+        routinesPerFolder.set(routine.folderId, (routinesPerFolder.get(routine.folderId) ?? 0) + 1);
+      });
+
+      return folders.map((folder) => ({
+        ...folder,
+        routinesCount: routinesPerFolder.get(folder.id) ?? 0,
+        icon: folder.icon || 'folder',
+        accentColor: folder.color || '#22c55e'
+      }));
+    })
+  );
+
   protected editingFolderId: string | null = null;
   protected isSubmitting = false;
-  protected message = '';
-  protected isError = false;
+  protected isFormOpen = false;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(2)]],
@@ -35,25 +57,33 @@ export class FoldersPageComponent {
       return;
     }
     this.isSubmitting = true;
-    this.setMessage('');
     try {
       if (this.editingFolderId) {
         await this.folderService.updateFolder(this.editingFolderId, this.form.getRawValue());
-        this.setMessage('Carpeta actualizada.');
+        this.toast.success('Carpeta actualizada.');
       } else {
         await this.folderService.createFolder(this.form.getRawValue());
-        this.setMessage('Carpeta creada.');
+        this.toast.success('Carpeta creada.');
       }
       this.resetForm();
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     } finally {
       this.isSubmitting = false;
     }
   }
 
+  protected openCreateForm(): void {
+    if (this.editingFolderId) {
+      this.cancelEdit();
+      return;
+    }
+    this.isFormOpen = true;
+  }
+
   protected startEdit(folder: GymFolder): void {
     this.editingFolderId = folder.id;
+    this.isFormOpen = true;
     this.form.patchValue({
       name: folder.name,
       description: folder.description ?? '',
@@ -69,12 +99,12 @@ export class FoldersPageComponent {
     }
     try {
       await this.folderService.deleteFolder(folder.id);
-      this.setMessage('Carpeta eliminada.');
+      this.toast.success('Carpeta eliminada.');
       if (this.editingFolderId === folder.id) {
         this.resetForm();
       }
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     }
   }
 
@@ -84,16 +114,12 @@ export class FoldersPageComponent {
 
   private resetForm(): void {
     this.editingFolderId = null;
+    this.isFormOpen = false;
     this.form.reset({
       name: '',
       description: '',
       color: '',
       icon: ''
     });
-  }
-
-  private setMessage(message: string, isError = false): void {
-    this.message = message;
-    this.isError = isError;
   }
 }

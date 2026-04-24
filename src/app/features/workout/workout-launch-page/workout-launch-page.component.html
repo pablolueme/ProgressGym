@@ -1,25 +1,54 @@
-<section class="page-header">
+<section class="hero card">
+  <p class="kicker">Registro</p>
   <h1>Registrar entrenamiento</h1>
-  <p class="muted">Elige una rutina y empieza a registrar tus series.</p>
+  <p class="subtitle">Selecciona una rutina y empieza a guardar series con ritmo y claridad.</p>
 </section>
 
 <section class="routine-list">
   @if (vm$ | async; as routines) {
     @if (!routines.length) {
-      <article class="card">
-        <p class="muted">No hay rutinas disponibles. Crea una dentro de una carpeta.</p>
-        <a routerLink="/app/folders" class="btn btn-secondary">Ir a carpetas</a>
+      <article class="empty-state">
+        <span class="material-symbol">fitness_center</span>
+        <p class="muted">No hay rutinas disponibles. Crea una desde carpetas para empezar a registrar.</p>
+        <a routerLink="/app/folders" class="btn btn-primary">
+          <span class="material-symbol">folder_open</span>
+          Ir a carpetas
+        </a>
       </article>
     } @else {
       @for (item of routines; track item.routine.id) {
         <article class="card routine-card">
-          <div>
+          <div class="routine-head">
             <h2>{{ item.routine.name }}</h2>
-            <p class="muted">{{ item.folderName }} · {{ item.routine.exercises.length }} ejercicios</p>
+            <p class="muted">{{ item.routine.description || 'Rutina lista para entrenar.' }}</p>
           </div>
+
+          <div class="meta-grid">
+            <p>
+              <span class="material-symbol">folder</span>
+              {{ item.folderName }}
+            </p>
+            <p>
+              <span class="material-symbol">format_list_numbered</span>
+              {{ item.exerciseCount }} ejercicios
+            </p>
+            <p>
+              <span class="material-symbol">history</span>
+              @if (item.lastWorkoutDate) {
+                Ultimo: {{ item.lastWorkoutDate | date: 'shortDate' }}
+              } @else {
+                Sin entrenamientos aun
+              }
+            </p>
+          </div>
+
           <div class="row-actions">
-            <a [routerLink]="['/app/routines', item.routine.id]" class="btn btn-secondary">Abrir</a>
-            <a [routerLink]="['/app/workout/start', item.routine.id]" class="btn btn-primary">
+            <a [routerLink]="['/app/routines', item.routine.id]" class="btn btn-secondary">
+              <span class="material-symbol">visibility</span>
+              Ver rutina
+            </a>
+            <a [routerLink]="['/app/workout/start', item.routine.id]" class="btn btn-primary cta-btn">
+              <span class="material-symbol">play_arrow</span>
               Iniciar entrenamiento
             </a>
           </div>

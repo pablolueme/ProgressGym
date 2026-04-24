@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { combineLatest, map } from 'rxjs';
 import { Routine, WorkoutEntry, WorkoutSet } from '../../../core/models';
 import { RoutineService } from '../../../core/services/routine.service';
+import { UiToastService } from '../../../core/services/ui-toast.service';
 import { ExercisePerformance, WorkoutService } from '../../../core/services/workout.service';
 
 type SetForm = FormGroup<{
@@ -47,6 +48,7 @@ export class WorkoutStartPageComponent {
   private readonly router = inject(Router);
   private readonly routineService = inject(RoutineService);
   private readonly workoutService = inject(WorkoutService);
+  private readonly toast = inject(UiToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly routineId = this.route.snapshot.paramMap.get('routineId') ?? '';
@@ -68,8 +70,6 @@ export class WorkoutStartPageComponent {
   protected performanceMap = new Map<string, ExercisePerformance>();
   protected loadingRoutineId = '';
   protected isSaving = false;
-  protected message = '';
-  protected isError = false;
 
   constructor() {
     this.vm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ routine, performanceMap }) => {
@@ -144,16 +144,16 @@ export class WorkoutStartPageComponent {
     }));
 
     this.isSaving = true;
-    this.setMessage('');
     try {
       const workoutId = await this.workoutService.createWorkoutFromRoutine(
         this.currentRoutine,
         entries,
         this.form.controls.notes.value
       );
+      this.toast.success('Entrenamiento guardado.');
       await this.router.navigate(['/app/history', workoutId]);
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     } finally {
       this.isSaving = false;
     }
@@ -207,10 +207,5 @@ export class WorkoutStartPageComponent {
       rir: this.fb.control<number | null>(null),
       notes: this.fb.nonNullable.control('')
     });
-  }
-
-  private setMessage(message: string, isError = false): void {
-    this.message = message;
-    this.isError = isError;
   }
 }

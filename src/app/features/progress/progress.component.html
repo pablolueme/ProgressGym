@@ -1,39 +1,94 @@
-@if (overview$ | async; as overview) {
+@if (vm$ | async; as vm) {
   <section class="page-header">
+    <p class="kicker">Analitica</p>
     <h1>Progreso</h1>
-    <p class="muted">Resumen de marcas y frecuencia.</p>
+    <p class="subtitle">Controla como evoluciona tu rendimiento y tus marcas clave.</p>
   </section>
 
   <section class="stats-grid">
     <article class="stat-card">
-      <h2>{{ overview.totalWorkouts }}</h2>
+      <span class="material-symbol">fitness_center</span>
+      <h2>{{ vm.overview.totalWorkouts }}</h2>
       <p>Total entrenamientos</p>
     </article>
     <article class="stat-card">
-      <h2>{{ overview.workoutsThisWeek }}</h2>
+      <span class="material-symbol">calendar_month</span>
+      <h2>{{ vm.overview.workoutsThisWeek }}</h2>
       <p>Entrenamientos esta semana</p>
     </article>
     <article class="stat-card">
-      <h2>{{ overview.averageVolume | number: '1.0-0' }}</h2>
+      <span class="material-symbol">monitoring</span>
+      <h2>{{ vm.overview.averageVolume | number: '1.0-0' }}</h2>
       <p>Volumen medio por sesion</p>
     </article>
   </section>
 
   <section class="card">
-    <h2>Ejercicios con progreso</h2>
-    @if (!overview.exerciseProgress.length) {
-      <p class="muted">Aun no hay datos suficientes.</p>
+    <div class="section-head">
+      <h2>Ejercicios con registros</h2>
+      <p class="muted">Solo se muestran ejercicios que ya tienen historial.</p>
+    </div>
+
+    @if (!vm.withData.length) {
+      <div class="empty-state">
+        <span class="material-symbol">insights</span>
+        <p class="muted">Aun no hay datos suficientes para mostrar progreso.</p>
+      </div>
     } @else {
       <div class="progress-list">
-        @for (item of overview.exerciseProgress; track item.exerciseId) {
+        @for (item of vm.withData; track item.exerciseId) {
           <article class="progress-item">
-            <h3>{{ item.exerciseName }}</h3>
-            <p>Ultimo peso: {{ item.lastWeight ?? '-' }} kg</p>
-            <p>Mejor peso: {{ item.bestWeight ?? '-' }} kg</p>
-            <p>Ultima fecha: {{ item.lastDate ? (item.lastDate | date: 'shortDate') : '-' }}</p>
+            <div class="item-header">
+              <h3>{{ item.exerciseName }}</h3>
+              <span class="trend" [class.up]="item.trend === 'up'" [class.down]="item.trend === 'down'">
+                @if (item.trend === 'up') {
+                  <span class="material-symbol">trending_up</span>
+                  En alza
+                } @else if (item.trend === 'down') {
+                  <span class="material-symbol">trending_down</span>
+                  Por mejorar
+                } @else {
+                  <span class="material-symbol">trending_flat</span>
+                  Estable
+                }
+              </span>
+            </div>
+
+            <div class="metrics-grid">
+              <p><strong>Ultimo peso:</strong> {{ item.lastWeight ?? '-' }} kg</p>
+              <p><strong>Mejor peso:</strong> {{ item.bestWeight ?? '-' }} kg</p>
+              <p>
+                <strong>Ultima fecha:</strong>
+                {{ item.lastDate ? (item.lastDate | date: 'shortDate') : '-' }}
+              </p>
+            </div>
+
+            <div class="mini-progress">
+              <div class="bar">
+                <span [style.width.%]="item.progressRatio"></span>
+              </div>
+            </div>
           </article>
         }
       </div>
     }
+  </section>
+
+  @if (vm.withoutData.length) {
+    <section class="card soft-card">
+      <details>
+        <summary>Ejercicios sin registros ({{ vm.withoutData.length }})</summary>
+        <div class="pending-list">
+          @for (item of vm.withoutData; track item.exerciseId) {
+            <span>{{ item.exerciseName }}</span>
+          }
+        </div>
+      </details>
+    </section>
+  }
+
+  <section class="card soft-card">
+    <h3>Proximamente: graficas de progreso</h3>
+    <p class="muted">Esta zona queda preparada para curvas de carga, volumen y frecuencia por ejercicio.</p>
   </section>
 }

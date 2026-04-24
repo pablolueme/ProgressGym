@@ -50,15 +50,6 @@ label {
   gap: 0.4rem;
 }
 
-.message {
-  margin: 0;
-  color: var(--primary-color);
-}
-
-.message.error {
-  color: var(--error-color);
-}
-
 .actions {
   display: flex;
   flex-wrap: wrap;

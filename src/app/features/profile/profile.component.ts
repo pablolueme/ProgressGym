@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { UiToastService } from '../../core/services/ui-toast.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
 
 @Component({
@@ -16,6 +18,7 @@ export class ProfileComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly userProfileService = inject(UserProfileService);
+  private readonly toast = inject(UiToastService);
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly goals = [
@@ -29,8 +32,14 @@ export class ProfileComponent {
   protected readonly experienceLevels = ['Principiante', 'Intermedio', 'Avanzado'];
 
   protected readonly profile$ = this.userProfileService.profile$;
-  protected message = '';
-  protected isError = false;
+  protected readonly summary$ = this.profile$.pipe(
+    map((profile) => ({
+      name: profile?.name || 'Atleta',
+      goal: profile?.goal || 'Objetivo pendiente',
+      level: profile?.experienceLevel || 'Sin nivel',
+      trainingDaysPerWeek: profile?.trainingDaysPerWeek ?? 0
+    }))
+  );
   protected isSubmitting = false;
   private currentEmail = '';
 
@@ -69,7 +78,6 @@ export class ProfileComponent {
     }
 
     this.isSubmitting = true;
-    this.setMessage('');
     try {
       const raw = this.form.getRawValue();
       if (raw.email !== this.currentEmail) {
@@ -91,9 +99,9 @@ export class ProfileComponent {
         experienceLevel: raw.experienceLevel as 'Principiante' | 'Intermedio' | 'Avanzado',
         trainingDaysPerWeek: raw.trainingDaysPerWeek || undefined
       });
-      this.setMessage('Perfil actualizado.');
+      this.toast.success('Perfil actualizado.');
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     } finally {
       this.isSubmitting = false;
     }
@@ -110,9 +118,9 @@ export class ProfileComponent {
     }
     try {
       await this.userProfileService.deleteAllUserData();
-      this.setMessage('Datos eliminados.');
+      this.toast.info('Datos de usuario eliminados.');
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     }
   }
 
@@ -126,14 +134,9 @@ export class ProfileComponent {
     try {
       await this.userProfileService.deleteAllUserData();
       await this.authService.deleteCurrentAccount();
-      this.setMessage('Cuenta eliminada.');
+      this.toast.info('Cuenta eliminada.');
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error((error as Error).message);
     }
-  }
-
-  private setMessage(message: string, isError = false): void {
-    this.message = message;
-    this.isError = isError;
   }
 }

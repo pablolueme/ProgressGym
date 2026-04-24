@@ -1,15 +1,49 @@
-h1,
-h2 {
-  margin: 0.3rem 0;
+.profile-hero {
+  background:
+    radial-gradient(circle at 84% -8%, rgba(56, 189, 248, 0.2), transparent 42%),
+    radial-gradient(circle at 0% 100%, rgba(34, 197, 94, 0.12), transparent 38%),
+    var(--surface);
+  margin-bottom: 0.9rem;
 }
 
-.muted {
-  color: var(--text-muted);
+.hero-meta {
+  margin-top: 0.86rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  font-size: 0.84rem;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 0.31rem 0.58rem;
+  background: rgba(15, 21, 27, 0.7);
+}
+
+.meta-pill .material-symbol {
+  color: var(--secondary-color);
+  font-size: 1.02rem;
+}
+
+.section-head {
+  margin-bottom: 0.72rem;
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.section-head p {
+  margin: 0.2rem 0 0;
 }
 
 .form-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.76rem;
 }
 
 label {
@@ -18,17 +52,26 @@ label {
   color: var(--text-muted);
 }
 
+.save-btn {
+  justify-self: start;
+}
+
+.account-card {
+  margin-top: 0.9rem;
+}
+
 .row-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.54rem;
 }
 
-.message {
-  margin-bottom: 0;
-  color: var(--primary-color);
-}
+@media (min-width: 768px) {
+  .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.message.error {
-  color: var(--error-color);
+  .save-btn {
+    grid-column: 1 / -1;
+  }
 }

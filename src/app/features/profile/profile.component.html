@@ -1,9 +1,31 @@
-<section class="page-header">
-  <h1>Perfil / Ajustes</h1>
-  <p class="muted">Actualiza tu informacion personal y preferencias de entrenamiento.</p>
-</section>
+@if (summary$ | async; as summary) {
+  <section class="profile-hero card">
+    <p class="kicker">Perfil</p>
+    <h1>{{ summary.name }}</h1>
+    <p class="subtitle">Configura tu perfil para personalizar mejor el seguimiento.</p>
+    <div class="hero-meta">
+      <span class="meta-pill">
+        <span class="material-symbol">flag</span>
+        {{ summary.goal }}
+      </span>
+      <span class="meta-pill">
+        <span class="material-symbol">military_tech</span>
+        {{ summary.level }}
+      </span>
+      <span class="meta-pill">
+        <span class="material-symbol">event_repeat</span>
+        {{ summary.trainingDaysPerWeek }} dias/semana
+      </span>
+    </div>
+  </section>
+}
 
 <section class="card">
+  <div class="section-head">
+    <h2>Informacion personal</h2>
+    <p class="muted">Tus datos para entrenar con contexto y objetivos claros.</p>
+  </div>
+
   <form [formGroup]="form" (ngSubmit)="saveProfile()" class="form-grid">
     <label>
       Nombre
@@ -42,21 +64,31 @@
       <input type="number" formControlName="trainingDaysPerWeek" min="1" max="7" />
     </label>
 
-    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+    <button type="submit" class="btn btn-primary save-btn" [disabled]="isSubmitting">
+      <span class="material-symbol">save</span>
       {{ isSubmitting ? 'Guardando...' : 'Guardar perfil' }}
     </button>
   </form>
 </section>
 
-<section class="card">
-  <h2>Cuenta</h2>
-  <div class="row-actions">
-    <button type="button" class="btn btn-secondary" (click)="logout()">Cerrar sesion</button>
-    <button type="button" class="btn btn-warning" (click)="deleteData()">Borrar datos usuario</button>
-    <button type="button" class="btn btn-danger" (click)="deleteAccount()">Borrar cuenta</button>
+<section class="card account-card">
+  <div class="section-head">
+    <h2>Cuenta</h2>
+    <p class="muted">Acciones de sesion y mantenimiento de datos.</p>
   </div>
 
-  @if (message) {
-    <p class="message" [class.error]="isError">{{ message }}</p>
-  }
+  <div class="row-actions">
+    <button type="button" class="btn btn-secondary" (click)="logout()">
+      <span class="material-symbol">logout</span>
+      Cerrar sesion
+    </button>
+    <button type="button" class="btn btn-warning" (click)="deleteData()">
+      <span class="material-symbol">delete_sweep</span>
+      Borrar datos usuario
+    </button>
+    <button type="button" class="btn btn-danger" (click)="deleteAccount()">
+      <span class="material-symbol">person_remove</span>
+      Borrar cuenta
+    </button>
+  </div>
 </section>

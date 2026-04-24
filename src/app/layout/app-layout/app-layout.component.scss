@@ -9,8 +9,8 @@
 
 .content {
   width: 100%;
-  padding: 1rem 1rem 6rem;
-  max-width: 960px;
+  padding: 1rem 1rem 6.1rem;
+  max-width: 1040px;
   margin: 0 auto;
 }
 
@@ -28,7 +28,9 @@
     position: sticky;
     top: 0;
     height: 100dvh;
-    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    background:
+      radial-gradient(circle at 0 100%, rgba(56, 189, 248, 0.1), transparent 45%),
+      color-mix(in srgb, var(--surface) 96%, transparent);
     backdrop-filter: blur(8px);
   }
 
@@ -61,15 +63,24 @@
     color: var(--text-color);
     text-decoration: none;
     border: 1px solid transparent;
+    transition: border-color var(--fast), background-color var(--fast), transform var(--fast);
+  }
+
+  nav a:hover {
+    transform: translateX(2px);
   }
 
   nav a:hover,
   nav a.active {
-    background: var(--surface);
-    border-color: var(--border-color);
+    background: color-mix(in srgb, var(--surface-elevated) 90%, transparent);
+    border-color: color-mix(in srgb, var(--secondary-color) 32%, var(--border-color));
+  }
+
+  nav a.active {
+    box-shadow: inset 2px 0 0 var(--primary-color);
   }
 
   .content {
-    padding: 1.5rem;
+    padding: 1.35rem;
   }
 }

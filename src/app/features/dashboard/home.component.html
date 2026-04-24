@@ -1,57 +1,127 @@
 @if (vm$ | async; as vm) {
-  <section class="page-header">
+  <section class="hero card">
     <p class="kicker">Dashboard</p>
     <h1>Hola, {{ vm.profile?.name || 'atleta' }}</h1>
-    <p class="subtitle">Sigue registrando cada serie para mejorar tus marcas.</p>
+    <p class="subtitle">Entrena con foco, registra cada serie y gana claridad sobre tu progreso.</p>
+    <div class="hero-meta">
+      <span class="meta-pill">
+        <span class="material-symbol">folder</span>
+        {{ vm.foldersCount }} carpetas
+      </span>
+      <span class="meta-pill">
+        <span class="material-symbol">checklist</span>
+        {{ vm.routinesCount }} rutinas
+      </span>
+      <span class="meta-pill">
+        <span class="material-symbol">fitness_center</span>
+        {{ vm.overview.totalWorkouts }} entrenamientos
+      </span>
+    </div>
   </section>
 
   <section class="stats-grid">
     <article class="stat-card">
+      <span class="material-symbol stat-icon">fitness_center</span>
       <h2>{{ vm.overview.totalWorkouts }}</h2>
       <p>Total entrenamientos</p>
     </article>
     <article class="stat-card">
+      <span class="material-symbol stat-icon">calendar_month</span>
       <h2>{{ vm.overview.workoutsThisWeek }}</h2>
       <p>Esta semana</p>
     </article>
     <article class="stat-card">
+      <span class="material-symbol stat-icon">stacked_line_chart</span>
       <h2>{{ vm.overview.averageVolume | number: '1.0-0' }}</h2>
       <p>Volumen medio</p>
     </article>
   </section>
 
+  @if (vm.hasOnboardingPending) {
+    <section class="card">
+      <div class="section-head">
+        <h3>Tu siguiente paso</h3>
+        <p class="muted">Completa estos puntos para desbloquear una experiencia mas completa.</p>
+      </div>
+      <div class="checklist">
+        @for (step of vm.onboardingSteps; track step.title) {
+          <article class="check-item" [class.done]="step.done">
+            <span class="material-symbol">{{ step.done ? 'task_alt' : step.icon }}</span>
+            <div>
+              <h4>{{ step.title }}</h4>
+              <p>{{ step.description }}</p>
+            </div>
+            @if (!step.done) {
+              <a [routerLink]="step.route" class="btn btn-secondary">Ir</a>
+            }
+          </article>
+        }
+      </div>
+    </section>
+  }
+
   <section class="quick-actions card">
-    <h3>Accesos rapidos</h3>
+    <div class="section-head">
+      <h3>Accesos rapidos</h3>
+      <p class="muted">Atajos para las acciones mas frecuentes.</p>
+    </div>
     <div class="actions-grid">
-      <a routerLink="/app/folders" class="chip-btn">Crear carpeta</a>
-      <a routerLink="/app/folders" class="chip-btn">Crear rutina</a>
-      <a routerLink="/app/exercises" class="chip-btn">Crear ejercicio</a>
-      <a routerLink="/app/workout" class="chip-btn">Registrar entrenamiento</a>
-      <a routerLink="/app/progress" class="chip-btn">Ver progreso</a>
+      @for (action of quickActions; track action.label) {
+        <a [routerLink]="action.route" class="quick-link">
+          <span class="material-symbol">{{ action.icon }}</span>
+          <span>{{ action.label }}</span>
+        </a>
+      }
     </div>
   </section>
 
-  <section class="card">
-    <h3>Ultimo entrenamiento</h3>
-    @if (vm.lastWorkout) {
-      <p>{{ vm.lastWorkout.routineName }} · {{ vm.lastWorkout.date | date: 'short' }}</p>
-      <p class="muted">Ejercicios: {{ vm.lastWorkout.entries.length }}</p>
-      <a [routerLink]="['/app/history', vm.lastWorkout.id]" class="link">Ver detalle</a>
-    } @else {
-      <p class="muted">Todavia no has registrado entrenamientos.</p>
-    }
-  </section>
+  <section class="summary-grid">
+    <article class="card">
+      <div class="section-head">
+        <h3>Ultimo entrenamiento</h3>
+      </div>
+      @if (vm.lastWorkout) {
+        <div class="workout-main">
+          <h4>{{ vm.lastWorkout.routineName }}</h4>
+          <p class="muted">{{ vm.lastWorkout.date | date: 'short' }}</p>
+          <p class="muted">Ejercicios registrados: {{ vm.lastWorkout.entries.length }}</p>
+          <a [routerLink]="['/app/history', vm.lastWorkout.id]" class="btn btn-secondary">
+            <span class="material-symbol">visibility</span>
+            Ver detalle
+          </a>
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span class="material-symbol">hourglass_empty</span>
+          <p class="muted">Todavia no has guardado entrenamientos. Empieza hoy y construye tu historial.</p>
+          <a routerLink="/app/workout" class="btn btn-primary">
+            <span class="material-symbol">play_arrow</span>
+            Iniciar primer entrenamiento
+          </a>
+        </div>
+      }
+    </article>
 
-  <section class="card">
-    <h3>Ultimos ejercicios usados</h3>
-    @if (vm.recentExercises.length) {
-      <ul>
-        @for (exercise of vm.recentExercises; track exercise) {
-          <li>{{ exercise }}</li>
-        }
-      </ul>
-    } @else {
-      <p class="muted">Todavia no hay ejercicios recientes.</p>
-    }
+    <article class="card">
+      <div class="section-head">
+        <h3>Ultimos ejercicios usados</h3>
+      </div>
+      @if (vm.recentExercises.length) {
+        <div class="exercise-pills">
+          @for (exercise of vm.recentExercises; track exercise) {
+            <span class="exercise-pill">{{ exercise }}</span>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span class="material-symbol">library_add</span>
+          <p class="muted">Aun no hay ejercicios recientes. Registra una rutina para verlos aqui.</p>
+          <a routerLink="/app/workout" class="btn btn-secondary">
+            <span class="material-symbol">fitness_center</span>
+            Registrar entrenamiento
+          </a>
+        </div>
+      }
+    </article>
   </section>
 }

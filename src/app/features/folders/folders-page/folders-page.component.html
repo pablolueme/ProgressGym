@@ -1,59 +1,90 @@
-<section class="page-header">
-  <h1>Carpetas</h1>
-  <p class="muted">Organiza tus rutinas por grupo muscular u objetivo.</p>
+<section class="page-header header-row">
+  <div>
+    <p class="kicker">Biblioteca</p>
+    <h1>Carpetas</h1>
+    <p class="subtitle">Organiza tus rutinas por objetivo, nivel o grupo muscular.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="openCreateForm()">
+    <span class="material-symbol">create_new_folder</span>
+    {{ editingFolderId ? 'Editando carpeta' : 'Nueva carpeta' }}
+  </button>
 </section>
 
-<section class="card">
-  <h2>{{ editingFolderId ? 'Editar carpeta' : 'Nueva carpeta' }}</h2>
-  <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
-    <label>
-      Nombre
-      <input type="text" formControlName="name" placeholder="Pecho, Espalda, Fuerza..." />
-    </label>
-    <label>
-      Descripcion
-      <input type="text" formControlName="description" placeholder="Opcional" />
-    </label>
-    <label>
-      Color
-      <input type="text" formControlName="color" placeholder="#22C55E" />
-    </label>
-    <label>
-      Icono
-      <input type="text" formControlName="icon" placeholder="fitness_center" />
-    </label>
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
-        {{ isSubmitting ? 'Guardando...' : editingFolderId ? 'Actualizar' : 'Crear carpeta' }}
-      </button>
-      @if (editingFolderId) {
-        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
-      }
+@if (isFormOpen) {
+  <section class="card form-card">
+    <div class="section-head">
+      <h2>{{ editingFolderId ? 'Editar carpeta' : 'Crear carpeta' }}</h2>
+      <p class="muted">Personaliza nombre, color e icono para identificarla rapido.</p>
     </div>
-  </form>
 
-  @if (message) {
-    <p class="message" [class.error]="isError">{{ message }}</p>
-  }
-</section>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-grid">
+      <label>
+        Nombre
+        <input type="text" formControlName="name" placeholder="Pecho, Espalda, Fuerza..." />
+      </label>
+      <label>
+        Descripcion
+        <input type="text" formControlName="description" placeholder="Opcional" />
+      </label>
+      <label>
+        Color
+        <input type="text" formControlName="color" placeholder="#22C55E" />
+      </label>
+      <label>
+        Icono
+        <input type="text" formControlName="icon" placeholder="fitness_center" />
+      </label>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+          <span class="material-symbol">save</span>
+          {{ isSubmitting ? 'Guardando...' : editingFolderId ? 'Actualizar' : 'Crear carpeta' }}
+        </button>
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+          <span class="material-symbol">close</span>
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </section>
+}
 
 <section class="cards-list">
   @if (folders$ | async; as folders) {
     @if (!folders.length) {
-      <article class="card">
-        <p class="muted">No hay carpetas todavia.</p>
+      <article class="empty-state">
+        <span class="material-symbol">folder_open</span>
+        <p class="muted">Aun no hay carpetas. Crea la primera para empezar a estructurar tus rutinas.</p>
+        <button type="button" class="btn btn-primary" (click)="openCreateForm()">
+          <span class="material-symbol">add</span>
+          Crear primera carpeta
+        </button>
       </article>
     } @else {
       @for (folder of folders; track folder.id) {
-        <article class="card folder-card">
-          <div>
-            <h3>{{ folder.name }}</h3>
-            <p class="muted">{{ folder.description || 'Sin descripcion' }}</p>
-          </div>
+        <article class="card folder-card" [style.--folder-accent]="folder.accentColor">
+          <a [routerLink]="['/app/folders', folder.id]" class="folder-main">
+            <span class="icon-wrap">
+              <span class="material-symbol">{{ folder.icon }}</span>
+            </span>
+            <div>
+              <h3>{{ folder.name }}</h3>
+              <p class="muted">{{ folder.description || 'Sin descripcion' }}</p>
+              <p class="folder-meta">{{ folder.routinesCount }} rutinas</p>
+            </div>
+          </a>
           <div class="row-actions">
-            <a [routerLink]="['/app/folders', folder.id]" class="btn btn-secondary">Abrir</a>
-            <button type="button" class="btn btn-secondary" (click)="startEdit(folder)">Editar</button>
-            <button type="button" class="btn btn-danger" (click)="remove(folder)">Eliminar</button>
+            <a [routerLink]="['/app/folders', folder.id]" class="btn btn-secondary">
+              <span class="material-symbol">open_in_new</span>
+              Abrir
+            </a>
+            <button type="button" class="btn btn-secondary" (click)="startEdit(folder)">
+              <span class="material-symbol">edit</span>
+              Editar
+            </button>
+            <button type="button" class="btn btn-danger" (click)="remove(folder)">
+              <span class="material-symbol">delete</span>
+              Eliminar
+            </button>
           </div>
         </article>
       }
