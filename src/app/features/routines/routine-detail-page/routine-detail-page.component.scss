@@ -29,11 +29,27 @@ h3 {
   gap: 0.55rem;
 }
 
+.add-exercise-card {
+  display: grid;
+  gap: 0.85rem;
+}
+
 .form-grid,
 .quick-form {
   margin-top: 0.7rem;
   display: grid;
   gap: 0.7rem;
+}
+
+.quick-toggle-btn {
+  margin-top: 0.25rem;
+  width: fit-content;
+}
+
+.quick-form {
+  margin-top: 0.45rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border-color);
 }
 
 label {

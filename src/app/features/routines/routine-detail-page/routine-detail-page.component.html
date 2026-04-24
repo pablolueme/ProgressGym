@@ -56,7 +56,7 @@
     }
 
     @if (showAddExerciseForm) {
-      <section class="card">
+      <section class="card add-exercise-card">
         <h2>Anadir ejercicio</h2>
         <form [formGroup]="addExerciseForm" (ngSubmit)="addExercise(vm.routine!, vm.exercises)" class="form-grid">
           <label>
@@ -87,7 +87,7 @@
           <button type="submit" class="btn btn-primary">Anadir a rutina</button>
         </form>
 
-        <button type="button" class="btn btn-secondary" (click)="showQuickExercise = !showQuickExercise">
+        <button type="button" class="btn btn-secondary quick-toggle-btn" (click)="showQuickExercise = !showQuickExercise">
           {{ showQuickExercise ? 'Cerrar ejercicio rapido' : 'Crear ejercicio rapido' }}
         </button>
 
