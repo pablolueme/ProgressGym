@@ -1,0 +1,50 @@
+h1,
+h2 {
+  margin: 0.3rem 0;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--secondary-color);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.entries-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.sets-grid {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.6rem;
+}
+
+.set-item {
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  padding: 0.6rem;
+}
+
+.set-item p {
+  margin: 0.15rem 0;
+  color: var(--text-muted);
+}
+
+.message {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.message.error {
+  color: var(--error-color);
+}

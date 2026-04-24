@@ -1,0 +1,66 @@
+.auth-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.auth-card {
+  width: min(430px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.4rem;
+}
+
+h1 {
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0.3rem 0 1rem;
+  color: var(--text-muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.message {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--primary-color);
+}
+
+.message.error {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--error-color);
+}
+
+.link-btn {
+  background: transparent;
+  border: 0;
+  color: var(--secondary-color);
+  margin-top: 0.8rem;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.helper {
+  color: var(--text-muted);
+}
+
+.helper a {
+  color: var(--primary-color);
+}

@@ -1,0 +1,39 @@
+@if (overview$ | async; as overview) {
+  <section class="page-header">
+    <h1>Progreso</h1>
+    <p class="muted">Resumen de marcas y frecuencia.</p>
+  </section>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <h2>{{ overview.totalWorkouts }}</h2>
+      <p>Total entrenamientos</p>
+    </article>
+    <article class="stat-card">
+      <h2>{{ overview.workoutsThisWeek }}</h2>
+      <p>Entrenamientos esta semana</p>
+    </article>
+    <article class="stat-card">
+      <h2>{{ overview.averageVolume | number: '1.0-0' }}</h2>
+      <p>Volumen medio por sesion</p>
+    </article>
+  </section>
+
+  <section class="card">
+    <h2>Ejercicios con progreso</h2>
+    @if (!overview.exerciseProgress.length) {
+      <p class="muted">Aun no hay datos suficientes.</p>
+    } @else {
+      <div class="progress-list">
+        @for (item of overview.exerciseProgress; track item.exerciseId) {
+          <article class="progress-item">
+            <h3>{{ item.exerciseName }}</h3>
+            <p>Ultimo peso: {{ item.lastWeight ?? '-' }} kg</p>
+            <p>Mejor peso: {{ item.bestWeight ?? '-' }} kg</p>
+            <p>Ultima fecha: {{ item.lastDate ? (item.lastDate | date: 'shortDate') : '-' }}</p>
+          </article>
+        }
+      </div>
+    }
+  </section>
+}

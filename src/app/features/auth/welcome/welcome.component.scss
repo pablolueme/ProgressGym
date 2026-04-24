@@ -1,0 +1,39 @@
+.auth-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 50%),
+    radial-gradient(circle at bottom left, rgba(56, 189, 248, 0.14), transparent 55%);
+}
+
+.auth-card {
+  width: min(430px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.35);
+}
+
+.badge {
+  color: var(--secondary-color);
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+h1 {
+  margin: 0.3rem 0;
+  font-size: 2rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+}
+
+.actions {
+  margin-top: 1.4rem;
+  display: grid;
+  gap: 0.7rem;
+}

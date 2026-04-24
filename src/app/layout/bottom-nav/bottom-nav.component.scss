@@ -1,0 +1,37 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  border-top: 1px solid var(--border-color);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0.5rem 0.25rem calc(0.5rem + env(safe-area-inset-bottom));
+  z-index: 40;
+  backdrop-filter: blur(10px);
+}
+
+.bottom-nav a {
+  display: grid;
+  justify-items: center;
+  gap: 0.2rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  padding: 0.3rem;
+}
+
+.bottom-nav a.active {
+  color: var(--primary-color);
+}
+
+.material-symbol {
+  font-size: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  .bottom-nav {
+    display: none;
+  }
+}

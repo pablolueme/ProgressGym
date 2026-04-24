@@ -1,0 +1,87 @@
+.page-header h1 {
+  margin: 0.2rem 0;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--secondary-color);
+  font-size: 0.84rem;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 0.8rem;
+  padding: 1rem;
+}
+
+.stat-card h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.stat-card p {
+  margin: 0.3rem 0 0;
+  color: var(--text-muted);
+}
+
+.stat-card:nth-child(3) {
+  grid-column: span 2;
+}
+
+.card {
+  margin-top: 0.9rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.chip-btn {
+  display: inline-flex;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-color);
+  background: #11161d;
+  border: 1px solid var(--border-color);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--text-color);
+}
+
+.link {
+  color: var(--secondary-color);
+}
+
+@media (min-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .stat-card:nth-child(3) {
+    grid-column: auto;
+  }
+}

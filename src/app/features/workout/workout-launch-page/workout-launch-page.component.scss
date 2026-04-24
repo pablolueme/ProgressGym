@@ -1,0 +1,25 @@
+h1,
+h2 {
+  margin: 0.3rem 0;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.routine-list {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.routine-card {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.row-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}

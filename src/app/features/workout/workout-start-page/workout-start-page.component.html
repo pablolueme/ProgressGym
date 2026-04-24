@@ -1,0 +1,104 @@
+@if (vm$ | async; as vm) {
+  @if (!vm.routine) {
+    <section class="card">
+      <h1>Rutina no encontrada</h1>
+      <a routerLink="/app/workout" class="btn btn-secondary">Volver</a>
+    </section>
+  } @else {
+    <section class="card">
+      <p class="kicker">Registrar entrenamiento</p>
+      <h1>{{ vm.routine.name }}</h1>
+      <p class="muted">{{ vm.routine.description || 'Sin descripcion' }}</p>
+    </section>
+
+    <form [formGroup]="form" (ngSubmit)="saveWorkout()" class="workout-form">
+      @for (entry of entriesArray.controls; track entry.controls.exerciseId.value; let i = $index) {
+        <article class="card">
+          @let stats = getExercisePerformance(entry.controls.exerciseId.value);
+          <h2>{{ entry.controls.exerciseName.value }}</h2>
+          <p class="muted">
+            Objetivo: {{ entry.controls.targetSets.value }} series x {{ entry.controls.targetReps.value }}
+            · Descanso {{ entry.controls.restSeconds.value }} seg
+          </p>
+          <p class="muted">
+            Ultima vez: {{ stats.lastWeight ?? '-' }} kg x {{ stats.lastReps ?? '-' }} reps
+            · Mejor marca: {{ stats.bestWeight ?? '-' }} kg
+          </p>
+
+          <div formArrayName="entries">
+            <div [formGroupName]="i">
+              <div formArrayName="sets" class="sets-list">
+                @for (set of setsArray(i).controls; track $index; let j = $index) {
+                  <div class="set-row" [formGroupName]="j">
+                    <h3>Serie {{ set.controls.setNumber.value }}</h3>
+                    <div class="set-grid">
+                      <label>
+                        Peso (kg)
+                        <input type="number" formControlName="weight" step="0.5" />
+                      </label>
+                      <label>
+                        Reps
+                        <input type="number" formControlName="reps" />
+                      </label>
+                      <label>
+                        RPE
+                        <input type="number" formControlName="rpe" min="1" max="10" />
+                      </label>
+                      <label>
+                        RIR
+                        <input type="number" formControlName="rir" min="0" max="10" />
+                      </label>
+                    </div>
+                    <label>
+                      Notas serie
+                      <input type="text" formControlName="notes" />
+                    </label>
+                    <div class="row-actions">
+                      <button type="button" class="btn btn-secondary" (click)="copyPreviousWeight(i, j)">
+                        Copiar peso anterior
+                      </button>
+                      <button type="button" class="btn btn-danger" (click)="removeSet(i, j)">
+                        Eliminar serie
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <div class="row-actions">
+                <button type="button" class="btn btn-secondary" (click)="addSet(i)">Anadir serie</button>
+              </div>
+
+              <label>
+                Notas del ejercicio
+                <textarea rows="2" formControlName="notes"></textarea>
+              </label>
+            </div>
+          </div>
+        </article>
+      }
+
+      <section class="card">
+        <label>
+          Notas generales del entrenamiento
+          <textarea rows="3" formControlName="notes"></textarea>
+        </label>
+      </section>
+
+      @if (message) {
+        <section class="card">
+          <p class="message" [class.error]="isError">{{ message }}</p>
+        </section>
+      }
+
+      <section class="actions card">
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Guardando...' : 'Guardar entrenamiento' }}
+        </button>
+        <button type="button" class="btn btn-danger" (click)="cancelWorkout()">
+          Cancelar entrenamiento
+        </button>
+      </section>
+    </form>
+  }
+}

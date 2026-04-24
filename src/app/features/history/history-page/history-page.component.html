@@ -1,0 +1,30 @@
+<section class="page-header">
+  <h1>Historial</h1>
+  <p class="muted">Entrenamientos guardados, ordenados por fecha.</p>
+</section>
+
+<section class="history-list">
+  @if (workouts$ | async; as workouts) {
+    @if (!workouts.length) {
+      <article class="card">
+        <p class="muted">No hay entrenamientos registrados todavia.</p>
+      </article>
+    } @else {
+      @for (workout of workouts; track workout.id) {
+        <article class="card workout-card">
+          <div>
+            <h2>{{ workout.routineName }}</h2>
+            <p class="muted">{{ workout.date | date: 'fullDate' }}</p>
+            <p class="muted">
+              Ejercicios: {{ workout.entries.length }} · Volumen: {{ workout.totalVolume || 0 | number: '1.0-0' }}
+            </p>
+            @if (workout.notes) {
+              <p class="muted">{{ workout.notes }}</p>
+            }
+          </div>
+          <a [routerLink]="['/app/history', workout.id]" class="btn btn-secondary">Ver detalle</a>
+        </article>
+      }
+    }
+  }
+</section>

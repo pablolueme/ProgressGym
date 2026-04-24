@@ -1,0 +1,41 @@
+@if (vm$ | async; as vm) {
+  @if (!vm.exercise) {
+    <section class="card">
+      <h1>Ejercicio no encontrado</h1>
+      <a routerLink="/app/exercises" class="btn btn-secondary">Volver</a>
+    </section>
+  } @else {
+    <section class="card">
+      <p class="kicker">Detalle ejercicio</p>
+      <h1>{{ vm.exercise.name }}</h1>
+      <p class="muted">{{ vm.exercise.muscleGroup }} · {{ vm.exercise.type }}</p>
+      <div class="row-actions">
+        <a routerLink="/app/exercises" class="btn btn-secondary">Volver</a>
+      </div>
+    </section>
+
+    <section class="card stats-grid">
+      <article>
+        <h2>{{ vm.performance.lastWeight ?? '-' }} kg</h2>
+        <p>Ultimo peso usado</p>
+      </article>
+      <article>
+        <h2>{{ vm.performance.bestWeight ?? '-' }} kg</h2>
+        <p>Mejor peso</p>
+      </article>
+      <article>
+        <h2>{{ vm.performance.lastDate ? (vm.performance.lastDate | date: 'shortDate') : '-' }}</h2>
+        <p>Ultima fecha</p>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Informacion tecnica</h2>
+      <p><strong>Descripcion:</strong> {{ vm.exercise.description || 'Sin descripcion' }}</p>
+      <p><strong>Tecnica:</strong> {{ vm.exercise.technique || 'Sin tecnica' }}</p>
+      <p><strong>Tips:</strong> {{ vm.exercise.tips || 'Sin tips' }}</p>
+      <p><strong>Errores comunes:</strong> {{ vm.exercise.commonMistakes || 'Sin errores' }}</p>
+      <p><strong>Notas personales:</strong> {{ vm.exercise.personalNotes || 'Sin notas' }}</p>
+    </section>
+  }
+}

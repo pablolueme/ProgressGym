@@ -1,0 +1,30 @@
+<section class="auth-shell">
+  <article class="auth-card">
+    <h1>Iniciar sesion</h1>
+    <p class="subtitle">Accede para continuar con tus entrenamientos.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <label>
+        Email
+        <input type="email" formControlName="email" placeholder="tu@email.com" />
+      </label>
+      <label>
+        Contrasena
+        <input type="password" formControlName="password" placeholder="******" />
+      </label>
+
+      @if (message) {
+        <p class="message" [class.error]="isError">{{ message }}</p>
+      }
+
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+
+    <button type="button" class="link-btn" (click)="requestResetPassword()">
+      Recuperar contrasena
+    </button>
+    <p class="helper">No tienes cuenta? <a routerLink="/register">Crear cuenta</a></p>
+  </article>
+</section>

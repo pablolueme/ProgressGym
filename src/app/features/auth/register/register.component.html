@@ -1,0 +1,43 @@
+<section class="auth-shell">
+  <article class="auth-card">
+    <h1>Crear cuenta</h1>
+    <p class="subtitle">Empieza a registrar tu progreso.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+      <label>
+        Nombre
+        <input type="text" formControlName="name" placeholder="Tu nombre" />
+      </label>
+
+      <label>
+        Email
+        <input type="email" formControlName="email" placeholder="tu@email.com" />
+      </label>
+
+      <label>
+        Contrasena
+        <input type="password" formControlName="password" placeholder="******" />
+      </label>
+
+      <label>
+        Confirmar contrasena
+        <input type="password" formControlName="confirmPassword" placeholder="******" />
+      </label>
+
+      <label class="check-row">
+        <input type="checkbox" formControlName="seedData" />
+        Cargar carpetas y ejercicios de ejemplo
+      </label>
+
+      @if (message) {
+        <p class="message" [class.error]="isError">{{ message }}</p>
+      }
+
+      <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Creando...' : 'Crear cuenta' }}
+      </button>
+    </form>
+
+    <p class="helper">Ya tienes cuenta? <a routerLink="/login">Iniciar sesion</a></p>
+  </article>
+</section>

@@ -1,0 +1,107 @@
+<section class="page-header">
+  <h1>Ejercicios</h1>
+  <p class="muted">Crea y gestiona tu biblioteca personal.</p>
+</section>
+
+<section class="card">
+  <h2>{{ editingExerciseId ? 'Editar ejercicio' : 'Crear ejercicio' }}</h2>
+  <form [formGroup]="exerciseForm" (ngSubmit)="submitExercise()" class="form-grid">
+    <label>
+      Nombre
+      <input type="text" formControlName="name" />
+    </label>
+    <label>
+      Grupo muscular
+      <input type="text" formControlName="muscleGroup" placeholder="Pecho, Espalda..." />
+    </label>
+    <label>
+      Musculos secundarios (coma)
+      <input type="text" formControlName="secondaryMusclesText" placeholder="Triceps, Deltoide" />
+    </label>
+    <label>
+      Tipo
+      <select formControlName="type">
+        @for (type of exerciseTypes; track type) {
+          <option [value]="type">{{ type }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Descripcion
+      <textarea rows="2" formControlName="description"></textarea>
+    </label>
+    <label>
+      Tecnica
+      <textarea rows="2" formControlName="technique"></textarea>
+    </label>
+    <label>
+      Tips
+      <textarea rows="2" formControlName="tips"></textarea>
+    </label>
+    <label>
+      Errores comunes
+      <textarea rows="2" formControlName="commonMistakes"></textarea>
+    </label>
+    <label>
+      Notas personales
+      <textarea rows="2" formControlName="personalNotes"></textarea>
+    </label>
+    <div class="row-actions">
+      <button type="submit" class="btn btn-primary">
+        {{ editingExerciseId ? 'Actualizar' : 'Crear ejercicio' }}
+      </button>
+      @if (editingExerciseId) {
+        <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancelar</button>
+      }
+    </div>
+  </form>
+
+  @if (message) {
+    <p class="message" [class.error]="isError">{{ message }}</p>
+  }
+</section>
+
+<section class="card">
+  <h2>Buscar y filtrar</h2>
+  <form [formGroup]="filterForm" class="filters-grid">
+    <label>
+      Buscar por nombre
+      <input type="text" formControlName="search" />
+    </label>
+    <label>
+      Filtrar por grupo muscular
+      <input type="text" formControlName="muscleGroup" />
+    </label>
+  </form>
+</section>
+
+<section class="exercise-list">
+  @if (vm$ | async; as exercises) {
+    @if (!exercises.length) {
+      <article class="card">
+        <p class="muted">No hay ejercicios que coincidan.</p>
+      </article>
+    } @else {
+      @for (item of exercises; track item.exercise.id) {
+        <article class="card exercise-card">
+          <div>
+            <h3>{{ item.exercise.name }}</h3>
+            <p class="muted">{{ item.exercise.muscleGroup }} · {{ item.exercise.type }}</p>
+            <p class="muted">
+              Ultimo peso: {{ item.stats?.lastWeight ?? '-' }} kg · Mejor: {{ item.stats?.bestWeight ?? '-' }} kg
+            </p>
+          </div>
+          <div class="row-actions">
+            <a [routerLink]="['/app/exercises', item.exercise.id]" class="btn btn-secondary">Detalle</a>
+            <button type="button" class="btn btn-secondary" (click)="editExercise(item.exercise)">
+              Editar
+            </button>
+            <button type="button" class="btn btn-danger" (click)="removeExercise(item.exercise)">
+              Eliminar
+            </button>
+          </div>
+        </article>
+      }
+    }
+  }
+</section>

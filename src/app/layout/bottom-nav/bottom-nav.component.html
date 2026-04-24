@@ -1,0 +1,8 @@
+<nav class="bottom-nav">
+  @for (item of items; track item.route) {
+    <a [routerLink]="item.route" routerLinkActive="active">
+      <span class="material-symbol">{{ item.icon }}</span>
+      <span>{{ item.label }}</span>
+    </a>
+  }
+</nav>

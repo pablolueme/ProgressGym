@@ -1,0 +1,149 @@
+@if (vm$ | async; as vm) {
+  @if (!vm.routine) {
+    <section class="card">
+      <h1>Rutina no encontrada</h1>
+      <a routerLink="/app/folders" class="btn btn-secondary">Volver</a>
+    </section>
+  } @else {
+    <section class="card">
+      <p class="kicker">Detalle de rutina</p>
+      <h1>{{ vm.routine.name }}</h1>
+      <p class="muted">{{ vm.routine.description || 'Sin descripcion' }}</p>
+      <div class="row-actions">
+        <a [routerLink]="['/app/folders', vm.routine.folderId]" class="btn btn-secondary">Carpeta</a>
+        <a [routerLink]="['/app/workout/start', vm.routine.id]" class="btn btn-primary">
+          Iniciar entrenamiento
+        </a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Editar rutina</h2>
+      <button type="button" class="btn btn-secondary" (click)="setRoutineForm(vm.routine)">
+        Cargar datos actuales
+      </button>
+      <form [formGroup]="routineForm" (ngSubmit)="saveRoutineInfo(vm.routine)" class="form-grid">
+        <label>
+          Nombre
+          <input type="text" formControlName="name" />
+        </label>
+        <label>
+          Descripcion
+          <input type="text" formControlName="description" />
+        </label>
+        <label>
+          Dia
+          <input type="text" formControlName="day" />
+        </label>
+        <label>
+          Notas
+          <textarea rows="3" formControlName="notes"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Anadir ejercicio</h2>
+      <form [formGroup]="addExerciseForm" (ngSubmit)="addExercise(vm.routine, vm.exercises)" class="form-grid">
+        <label>
+          Ejercicio
+          <select formControlName="exerciseId">
+            <option value="">Selecciona...</option>
+            @for (exercise of vm.exercises; track exercise.id) {
+              <option [value]="exercise.id">{{ exercise.name }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          Series objetivo
+          <input type="number" formControlName="sets" />
+        </label>
+        <label>
+          Repeticiones objetivo
+          <input type="text" formControlName="reps" />
+        </label>
+        <label>
+          Descanso recomendado (seg)
+          <input type="number" formControlName="restSeconds" />
+        </label>
+        <label>
+          Notas
+          <textarea rows="2" formControlName="notes"></textarea>
+        </label>
+        <button type="submit" class="btn btn-primary">Anadir a rutina</button>
+      </form>
+
+      <button type="button" class="btn btn-secondary" (click)="showQuickExercise = !showQuickExercise">
+        {{ showQuickExercise ? 'Cerrar' : '+ Crear ejercicio rapido' }}
+      </button>
+
+      @if (showQuickExercise) {
+        <form [formGroup]="quickExerciseForm" (ngSubmit)="createQuickExerciseAndAttach(vm.routine)" class="quick-form">
+          <label>
+            Nombre
+            <input type="text" formControlName="name" placeholder="Press inclinado en multipower" />
+          </label>
+          <label>
+            Grupo muscular
+            <input type="text" formControlName="muscleGroup" placeholder="Pecho" />
+          </label>
+          <label>
+            Tipo
+            <select formControlName="type">
+              @for (type of exerciseTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            Descripcion
+            <textarea rows="2" formControlName="description"></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary">Crear y anadir</button>
+        </form>
+      }
+    </section>
+
+    <section class="card">
+      <h2>Ejercicios de la rutina</h2>
+      @if (!vm.routine.exercises.length) {
+        <p class="muted">No hay ejercicios anadidos todavia.</p>
+      } @else {
+        <div class="exercise-list">
+          @for (exercise of vm.routine.exercises; track exercise.exerciseId; let i = $index) {
+            <article class="exercise-row">
+              <div>
+                <h3>{{ exercise.order + 1 }}. {{ exercise.exerciseName }}</h3>
+                <p class="muted">
+                  {{ exercise.sets }} series · {{ exercise.reps }} reps ·
+                  Descanso: {{ exercise.restSeconds || 0 }} seg
+                </p>
+                @if (exercise.notes) {
+                  <p class="muted">{{ exercise.notes }}</p>
+                }
+              </div>
+              <div class="row-actions">
+                <button type="button" class="btn btn-secondary" (click)="moveExercise(vm.routine, i, -1)">
+                  Subir
+                </button>
+                <button type="button" class="btn btn-secondary" (click)="moveExercise(vm.routine, i, 1)">
+                  Bajar
+                </button>
+                <button type="button" class="btn btn-danger" (click)="removeExercise(vm.routine, i)">
+                  Quitar
+                </button>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    @if (message) {
+      <section class="card">
+        <p class="message" [class.error]="isError">{{ message }}</p>
+      </section>
+    }
+  }
+}

@@ -1,0 +1,23 @@
+<div class="app-shell">
+  <aside class="desktop-nav">
+    <div class="brand">
+      <h1>GymTrack</h1>
+      <p>ProgresoGym</p>
+    </div>
+
+    <nav>
+      @for (item of navItems; track item.route) {
+        <a [routerLink]="item.route" routerLinkActive="active">
+          <span class="material-symbol">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>
+
+<app-bottom-nav />

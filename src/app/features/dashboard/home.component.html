@@ -1,0 +1,57 @@
+@if (vm$ | async; as vm) {
+  <section class="page-header">
+    <p class="kicker">Dashboard</p>
+    <h1>Hola, {{ vm.profile?.name || 'atleta' }}</h1>
+    <p class="subtitle">Sigue registrando cada serie para mejorar tus marcas.</p>
+  </section>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <h2>{{ vm.overview.totalWorkouts }}</h2>
+      <p>Total entrenamientos</p>
+    </article>
+    <article class="stat-card">
+      <h2>{{ vm.overview.workoutsThisWeek }}</h2>
+      <p>Esta semana</p>
+    </article>
+    <article class="stat-card">
+      <h2>{{ vm.overview.averageVolume | number: '1.0-0' }}</h2>
+      <p>Volumen medio</p>
+    </article>
+  </section>
+
+  <section class="quick-actions card">
+    <h3>Accesos rapidos</h3>
+    <div class="actions-grid">
+      <a routerLink="/app/folders" class="chip-btn">Crear carpeta</a>
+      <a routerLink="/app/folders" class="chip-btn">Crear rutina</a>
+      <a routerLink="/app/exercises" class="chip-btn">Crear ejercicio</a>
+      <a routerLink="/app/workout" class="chip-btn">Registrar entrenamiento</a>
+      <a routerLink="/app/progress" class="chip-btn">Ver progreso</a>
+    </div>
+  </section>
+
+  <section class="card">
+    <h3>Ultimo entrenamiento</h3>
+    @if (vm.lastWorkout) {
+      <p>{{ vm.lastWorkout.routineName }} · {{ vm.lastWorkout.date | date: 'short' }}</p>
+      <p class="muted">Ejercicios: {{ vm.lastWorkout.entries.length }}</p>
+      <a [routerLink]="['/app/history', vm.lastWorkout.id]" class="link">Ver detalle</a>
+    } @else {
+      <p class="muted">Todavia no has registrado entrenamientos.</p>
+    }
+  </section>
+
+  <section class="card">
+    <h3>Ultimos ejercicios usados</h3>
+    @if (vm.recentExercises.length) {
+      <ul>
+        @for (exercise of vm.recentExercises; track exercise) {
+          <li>{{ exercise }}</li>
+        }
+      </ul>
+    } @else {
+      <p class="muted">Todavia no hay ejercicios recientes.</p>
+    }
+  </section>
+}

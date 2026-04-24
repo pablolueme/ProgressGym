@@ -1,0 +1,30 @@
+<section class="page-header">
+  <h1>Registrar entrenamiento</h1>
+  <p class="muted">Elige una rutina y empieza a registrar tus series.</p>
+</section>
+
+<section class="routine-list">
+  @if (vm$ | async; as routines) {
+    @if (!routines.length) {
+      <article class="card">
+        <p class="muted">No hay rutinas disponibles. Crea una dentro de una carpeta.</p>
+        <a routerLink="/app/folders" class="btn btn-secondary">Ir a carpetas</a>
+      </article>
+    } @else {
+      @for (item of routines; track item.routine.id) {
+        <article class="card routine-card">
+          <div>
+            <h2>{{ item.routine.name }}</h2>
+            <p class="muted">{{ item.folderName }} · {{ item.routine.exercises.length }} ejercicios</p>
+          </div>
+          <div class="row-actions">
+            <a [routerLink]="['/app/routines', item.routine.id]" class="btn btn-secondary">Abrir</a>
+            <a [routerLink]="['/app/workout/start', item.routine.id]" class="btn btn-primary">
+              Iniciar entrenamiento
+            </a>
+          </div>
+        </article>
+      }
+    }
+  }
+</section>

@@ -1,0 +1,64 @@
+.auth-shell {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.auth-card {
+  width: min(480px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  padding: 1.4rem;
+}
+
+h1 {
+  margin: 0;
+}
+
+.subtitle {
+  margin: 0.4rem 0 1rem;
+  color: var(--text-muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.check-row {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-color);
+}
+
+.message {
+  margin: 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.55rem;
+  background: rgba(34, 197, 94, 0.12);
+  color: var(--primary-color);
+}
+
+.message.error {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--error-color);
+}
+
+.helper {
+  margin: 0.9rem 0 0;
+  color: var(--text-muted);
+}
+
+.helper a {
+  color: var(--secondary-color);
+}

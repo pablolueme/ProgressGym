@@ -1,0 +1,75 @@
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.desktop-nav {
+  display: none;
+}
+
+.content {
+  width: 100%;
+  padding: 1rem 1rem 6rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.material-symbol {
+  font-size: 1.2rem;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 1rem;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    background: color-mix(in srgb, var(--surface) 96%, transparent);
+    backdrop-filter: blur(8px);
+  }
+
+  .brand {
+    margin-bottom: 1.5rem;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 1.4rem;
+  }
+
+  .brand p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  nav {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  nav a {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.7rem;
+    color: var(--text-color);
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  nav a:hover,
+  nav a.active {
+    background: var(--surface);
+    border-color: var(--border-color);
+  }
+
+  .content {
+    padding: 1.5rem;
+  }
+}

@@ -1,0 +1,72 @@
+h1,
+h2,
+h3 {
+  margin: 0.3rem 0;
+}
+
+.kicker {
+  margin: 0;
+  color: var(--secondary-color);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.workout-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.sets-list {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0.6rem 0;
+}
+
+.set-row {
+  border: 1px solid var(--border-color);
+  border-radius: 0.7rem;
+  padding: 0.75rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.set-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--text-muted);
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.message {
+  margin: 0;
+  color: var(--primary-color);
+}
+
+.message.error {
+  color: var(--error-color);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+@media (min-width: 768px) {
+  .set-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

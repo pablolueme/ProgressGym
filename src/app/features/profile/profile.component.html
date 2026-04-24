@@ -1,0 +1,62 @@
+<section class="page-header">
+  <h1>Perfil / Ajustes</h1>
+  <p class="muted">Actualiza tu informacion personal y preferencias de entrenamiento.</p>
+</section>
+
+<section class="card">
+  <form [formGroup]="form" (ngSubmit)="saveProfile()" class="form-grid">
+    <label>
+      Nombre
+      <input type="text" formControlName="name" />
+    </label>
+    <label>
+      Email
+      <input type="email" formControlName="email" />
+    </label>
+    <label>
+      Peso actual (kg)
+      <input type="number" formControlName="weight" />
+    </label>
+    <label>
+      Altura (cm)
+      <input type="number" formControlName="height" />
+    </label>
+    <label>
+      Objetivo fisico
+      <select formControlName="goal">
+        @for (goal of goals; track goal) {
+          <option [value]="goal">{{ goal }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Nivel
+      <select formControlName="experienceLevel">
+        @for (level of experienceLevels; track level) {
+          <option [value]="level">{{ level }}</option>
+        }
+      </select>
+    </label>
+    <label>
+      Dias de entrenamiento por semana
+      <input type="number" formControlName="trainingDaysPerWeek" min="1" max="7" />
+    </label>
+
+    <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+      {{ isSubmitting ? 'Guardando...' : 'Guardar perfil' }}
+    </button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Cuenta</h2>
+  <div class="row-actions">
+    <button type="button" class="btn btn-secondary" (click)="logout()">Cerrar sesion</button>
+    <button type="button" class="btn btn-warning" (click)="deleteData()">Borrar datos usuario</button>
+    <button type="button" class="btn btn-danger" (click)="deleteAccount()">Borrar cuenta</button>
+  </div>
+
+  @if (message) {
+    <p class="message" [class.error]="isError">{{ message }}</p>
+  }
+</section>

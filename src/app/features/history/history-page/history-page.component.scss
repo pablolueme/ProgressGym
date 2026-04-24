@@ -1,0 +1,18 @@
+h1,
+h2 {
+  margin: 0.3rem 0;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.history-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.workout-card {
+  display: grid;
+  gap: 0.7rem;
+}
