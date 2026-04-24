@@ -1,11 +1,12 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: 'REPLACE_ME',
-    authDomain: 'REPLACE_ME.firebaseapp.com',
-    projectId: 'REPLACE_ME',
-    storageBucket: 'REPLACE_ME.appspot.com',
-    messagingSenderId: 'REPLACE_ME',
-    appId: 'REPLACE_ME'
+    apiKey: 'AIzaSyD10mqsMJjcDOutMfcRpmJdrQQMDRSDIAU',
+    authDomain: 'proyectogymprogress.firebaseapp.com',
+    projectId: 'proyectogymprogress',
+    storageBucket: 'proyectogymprogress.firebasestorage.app',
+    messagingSenderId: '699162403070',
+    appId: '1:699162403070:web:d95917904252e257c305af',
+    measurementId: 'G-V87KRK40HY'
   }
 };
