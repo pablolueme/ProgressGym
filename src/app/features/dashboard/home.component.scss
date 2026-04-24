@@ -1,3 +1,8 @@
+:host {
+  display: grid;
+  gap: 1rem;
+}
+
 .hero {
   background:
     radial-gradient(circle at 86% -8%, rgba(56, 189, 248, 0.2), transparent 45%),
@@ -45,7 +50,6 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
-  margin-top: 1rem;
 }
 
 .stat-card {
@@ -75,7 +79,7 @@
 }
 
 .quick-actions {
-  margin-top: 0.9rem;
+  margin-top: 0.1rem;
 }
 
 .actions-grid {
@@ -148,7 +152,6 @@
 .summary-grid {
   display: grid;
   gap: 0.9rem;
-  margin-top: 0.9rem;
 }
 
 .workout-main h4 {
@@ -180,6 +183,10 @@
 }
 
 @media (min-width: 768px) {
+  :host {
+    gap: 1.2rem;
+  }
+
   .stats-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
