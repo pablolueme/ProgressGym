@@ -1,3 +1,8 @@
+:host {
+  display: grid;
+  gap: 1rem;
+}
+
 h1,
 h2,
 h3 {
@@ -13,9 +18,20 @@ h3 {
   color: var(--text-muted);
 }
 
+.meta {
+  margin: 0.4rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.routine-hero {
+  display: grid;
+  gap: 0.55rem;
+}
+
 .form-grid,
 .quick-form {
-  margin-top: 0.8rem;
+  margin-top: 0.7rem;
   display: grid;
   gap: 0.7rem;
 }
@@ -32,6 +48,11 @@ label {
   gap: 0.45rem;
 }
 
+.empty-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .exercise-list {
   display: grid;
   gap: 0.7rem;
@@ -45,11 +66,13 @@ label {
   gap: 0.55rem;
 }
 
-.message {
-  margin: 0;
-  color: var(--primary-color);
-}
+@media (min-width: 768px) {
+  .exercise-row {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
 
-.message.error {
-  color: var(--error-color);
+  .row-actions {
+    justify-content: flex-end;
+  }
 }

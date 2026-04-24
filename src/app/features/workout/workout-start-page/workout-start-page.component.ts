@@ -10,8 +10,8 @@ import {
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { combineLatest, map } from 'rxjs';
-import { Routine, WorkoutEntry, WorkoutSet } from '../../../core/models';
+import { catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
+import { Routine, WorkoutEntry } from '../../../core/models';
 import { RoutineService } from '../../../core/services/routine.service';
 import { UiToastService } from '../../../core/services/ui-toast.service';
 import { ExercisePerformance, WorkoutService } from '../../../core/services/workout.service';
@@ -35,6 +35,16 @@ type EntryForm = FormGroup<{
   sets: FormArray<SetForm>;
 }>;
 
+type WorkoutStartStatus = 'loading' | 'ready' | 'not-found' | 'invalid' | 'error' | 'no-exercises';
+
+interface WorkoutStartViewModel {
+  status: WorkoutStartStatus;
+  routineId: string;
+  routine: Routine | null;
+  performanceMap: Map<string, ExercisePerformance>;
+  errorMessage: string;
+}
+
 @Component({
   selector: 'app-workout-start-page',
   standalone: true,
@@ -51,14 +61,69 @@ export class WorkoutStartPageComponent {
   private readonly toast = inject(UiToastService);
   private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly routineId = this.route.snapshot.paramMap.get('routineId') ?? '';
-  protected readonly routine$ = this.routineService.routineById$(this.routineId);
+  private readonly routeRoutineId$ = this.route.paramMap.pipe(
+    map((params) => params.get('routineId')?.trim() ?? ''),
+    distinctUntilChanged()
+  );
 
-  protected readonly vm$ = combineLatest([this.routine$, this.workoutService.workouts$]).pipe(
-    map(([routine, workouts]) => ({
-      routine,
-      performanceMap: this.workoutService.buildPerformanceMap(workouts)
-    }))
+  protected readonly vm$ = this.routeRoutineId$.pipe(
+    switchMap((routineId) => {
+      if (!routineId) {
+        return of<WorkoutStartViewModel>({
+          status: 'invalid',
+          routineId: '',
+          routine: null,
+          performanceMap: new Map<string, ExercisePerformance>(),
+          errorMessage: 'No se ha recibido un identificador de rutina valido.'
+        });
+      }
+      return combineLatest([this.routineService.getRoutineById(routineId), this.workoutService.workouts$]).pipe(
+        map(([routine, workouts]) => {
+          const performanceMap = this.workoutService.buildPerformanceMap(workouts);
+          if (!routine) {
+            return {
+              status: 'not-found',
+              routineId,
+              routine: null,
+              performanceMap,
+              errorMessage: 'La rutina no existe o no esta disponible.'
+            } satisfies WorkoutStartViewModel;
+          }
+          if (!routine.exercises.length) {
+            return {
+              status: 'no-exercises',
+              routineId,
+              routine,
+              performanceMap,
+              errorMessage: 'Esta rutina no tiene ejercicios todavia.'
+            } satisfies WorkoutStartViewModel;
+          }
+          return {
+            status: 'ready',
+            routineId,
+            routine,
+            performanceMap,
+            errorMessage: ''
+          } satisfies WorkoutStartViewModel;
+        }),
+        startWith({
+          status: 'loading',
+          routineId,
+          routine: null,
+          performanceMap: new Map<string, ExercisePerformance>(),
+          errorMessage: ''
+        } satisfies WorkoutStartViewModel),
+        catchError((error) =>
+          of<WorkoutStartViewModel>({
+            status: 'error',
+            routineId,
+            routine: null,
+            performanceMap: new Map<string, ExercisePerformance>(),
+            errorMessage: this.getErrorMessage(error, 'No se pudo cargar la rutina.')
+          })
+        )
+      );
+    })
   );
 
   protected readonly form = this.fb.nonNullable.group({
@@ -68,20 +133,24 @@ export class WorkoutStartPageComponent {
 
   protected currentRoutine: Routine | null = null;
   protected performanceMap = new Map<string, ExercisePerformance>();
-  protected loadingRoutineId = '';
+  protected loadedRoutineId = '';
   protected isSaving = false;
 
   constructor() {
-    this.vm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(({ routine, performanceMap }) => {
-      this.performanceMap = performanceMap;
-      if (!routine) {
+    this.vm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((vm) => {
+      this.performanceMap = vm.performanceMap;
+      this.currentRoutine = vm.routine;
+
+      if (vm.status === 'ready' && vm.routine) {
+        if (this.loadedRoutineId !== vm.routine.id) {
+          this.loadedRoutineId = vm.routine.id;
+          this.buildEntriesFromRoutine(vm.routine);
+        }
         return;
       }
-      this.currentRoutine = routine;
-      if (this.loadingRoutineId !== routine.id) {
-        this.loadingRoutineId = routine.id;
-        this.buildEntriesFromRoutine(routine);
-      }
+
+      this.loadedRoutineId = '';
+      this.entriesArray.clear();
     });
   }
 
@@ -124,7 +193,11 @@ export class WorkoutStartPageComponent {
   }
 
   protected async saveWorkout(): Promise<void> {
-    if (!this.currentRoutine || this.form.invalid || this.isSaving) {
+    if (!this.currentRoutine || this.entriesArray.length === 0) {
+      this.toast.error('No puedes iniciar entrenamiento sin ejercicios en la rutina.');
+      return;
+    }
+    if (this.form.invalid || this.isSaving) {
       this.form.markAllAsTouched();
       return;
     }
@@ -153,7 +226,7 @@ export class WorkoutStartPageComponent {
       this.toast.success('Entrenamiento guardado.');
       await this.router.navigate(['/app/history', workoutId]);
     } catch (error) {
-      this.toast.error((error as Error).message);
+      this.toast.error(this.getErrorMessage(error, 'No se pudo guardar el entrenamiento.'));
     } finally {
       this.isSaving = false;
     }
@@ -207,5 +280,12 @@ export class WorkoutStartPageComponent {
       rir: this.fb.control<number | null>(null),
       notes: this.fb.nonNullable.control('')
     });
+  }
+
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return fallback;
   }
 }

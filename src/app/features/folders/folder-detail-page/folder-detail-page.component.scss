@@ -1,6 +1,12 @@
+:host {
+  display: grid;
+  gap: 1rem;
+}
+
 h1,
-h2 {
-  margin: 0.3rem 0;
+h2,
+h3 {
+  margin: 0.25rem 0;
 }
 
 .kicker {
@@ -10,6 +16,17 @@ h2 {
 
 .muted {
   color: var(--text-muted);
+}
+
+.meta {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.folder-hero {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .form-grid {
@@ -23,27 +40,34 @@ label {
   color: var(--text-muted);
 }
 
-.row-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
 .cards-list {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.85rem;
 }
 
 .routine-card {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.75rem;
 }
 
-.message {
-  margin: 0.7rem 0 0;
-  color: var(--primary-color);
+.empty-card {
+  display: grid;
+  gap: 0.75rem;
 }
 
-.message.error {
-  color: var(--error-color);
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .routine-card {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .row-actions {
+    justify-content: flex-end;
+  }
 }

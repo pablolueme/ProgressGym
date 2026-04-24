@@ -8,7 +8,6 @@ import {
   doc,
   docData,
   Firestore,
-  orderBy,
   query,
   serverTimestamp,
   updateDoc,
@@ -28,46 +27,42 @@ export interface RoutineInput {
   notes?: string;
 }
 
+export interface RoutineCreateData {
+  name: string;
+  description?: string;
+  day?: string;
+  notes?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class RoutineService {
   private readonly firestore = inject(Firestore);
   private readonly auth = inject(Auth);
   private readonly authService = inject(AuthService);
 
-  readonly routines$ = this.authService.uid$.pipe(
-    switchMap((uid) => {
-      if (!uid) {
-        return of([] as Routine[]);
-      }
-      const routinesQuery = query(
-        collection(this.firestore, routinesCollectionPath(uid)),
-        orderBy('updatedAt', 'desc')
-      );
-      return collectionData(routinesQuery, { idField: 'id' }).pipe(
-        map((items) => items.map((item) => this.mapRoutine(item)))
-      );
-    })
-  );
+  readonly routines$ = this.getRoutines();
 
-  routinesByFolder$(folderId: string): Observable<Routine[]> {
+  getRoutines(): Observable<Routine[]> {
     return this.authService.uid$.pipe(
       switchMap((uid) => {
-        if (!uid || !folderId) {
+        if (!uid) {
           return of([] as Routine[]);
         }
         const routinesQuery = query(
-          collection(this.firestore, routinesCollectionPath(uid)),
-          where('folderId', '==', folderId),
-          orderBy('updatedAt', 'desc')
+          collection(this.firestore, routinesCollectionPath(uid))
         );
         return collectionData(routinesQuery, { idField: 'id' }).pipe(
-          map((items) => items.map((item) => this.mapRoutine(item)))
+          map((items) =>
+            items
+              .map((item) => this.mapRoutine(item))
+              .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+          )
         );
       })
     );
   }
 
-  routineById$(routineId: string): Observable<Routine | null> {
+  getRoutineById(routineId: string): Observable<Routine | null> {
     return this.authService.uid$.pipe(
       switchMap((uid) => {
         if (!uid || !routineId) {
@@ -80,15 +75,62 @@ export class RoutineService {
     );
   }
 
-  async createRoutine(input: RoutineInput): Promise<string> {
+  getRoutinesByFolderId(folderId: string): Observable<Routine[]> {
+    return this.authService.uid$.pipe(
+      switchMap((uid) => {
+        if (!uid || !folderId) {
+          return of([] as Routine[]);
+        }
+        const routinesQuery = query(
+          collection(this.firestore, routinesCollectionPath(uid)),
+          where('folderId', '==', folderId)
+        );
+        return collectionData(routinesQuery, { idField: 'id' }).pipe(
+          map((items) =>
+            items
+              .map((item) => this.mapRoutine(item))
+              .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+          )
+        );
+      })
+    );
+  }
+
+  routinesByFolder$(folderId: string): Observable<Routine[]> {
+    return this.getRoutinesByFolderId(folderId);
+  }
+
+  routineById$(routineId: string): Observable<Routine | null> {
+    return this.getRoutineById(routineId);
+  }
+
+  async createRoutine(folderId: string, data: RoutineCreateData): Promise<string>;
+  async createRoutine(input: RoutineInput): Promise<string>;
+  async createRoutine(
+    folderIdOrInput: string | RoutineInput,
+    data?: RoutineCreateData
+  ): Promise<string> {
     const uid = this.requireUid();
+    const payload =
+      typeof folderIdOrInput === 'string'
+        ? { folderId: folderIdOrInput, ...(data ?? {}) }
+        : folderIdOrInput;
+    const folderId = payload.folderId?.trim() ?? '';
+    const name = payload.name?.trim() ?? '';
+    if (!folderId) {
+      throw new Error('La rutina debe tener carpeta.');
+    }
+    if (!name) {
+      throw new Error('El nombre de la rutina es obligatorio.');
+    }
+
     const reference = await addDoc(collection(this.firestore, routinesCollectionPath(uid)), {
       userId: uid,
-      folderId: input.folderId,
-      name: input.name.trim(),
-      description: input.description?.trim() || '',
-      day: input.day?.trim() || '',
-      notes: input.notes?.trim() || '',
+      folderId,
+      name,
+      description: payload.description?.trim() || '',
+      day: payload.day?.trim() || '',
+      notes: payload.notes?.trim() || '',
       exercises: [],
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -98,8 +140,36 @@ export class RoutineService {
 
   async updateRoutine(routineId: string, input: Partial<RoutineInput>): Promise<void> {
     const uid = this.requireUid();
+    const updates: Partial<RoutineInput> = {
+      ...input
+    };
+
+    if (typeof updates.name === 'string') {
+      const normalizedName = updates.name.trim();
+      if (!normalizedName) {
+        throw new Error('El nombre de la rutina es obligatorio.');
+      }
+      updates.name = normalizedName;
+    }
+    if (typeof updates.folderId === 'string') {
+      const normalizedFolderId = updates.folderId.trim();
+      if (!normalizedFolderId) {
+        throw new Error('La rutina debe tener carpeta.');
+      }
+      updates.folderId = normalizedFolderId;
+    }
+    if (typeof updates.description === 'string') {
+      updates.description = updates.description.trim();
+    }
+    if (typeof updates.day === 'string') {
+      updates.day = updates.day.trim();
+    }
+    if (typeof updates.notes === 'string') {
+      updates.notes = updates.notes.trim();
+    }
+
     await updateDoc(doc(this.firestore, `${routinesCollectionPath(uid)}/${routineId}`), {
-      ...input,
+      ...updates,
       updatedAt: serverTimestamp()
     });
   }

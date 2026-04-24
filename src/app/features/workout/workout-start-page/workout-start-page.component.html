@@ -1,17 +1,34 @@
 @if (vm$ | async; as vm) {
-  @if (!vm.routine) {
+  @if (vm.status === 'loading') {
     <section class="card">
-      <h1>Rutina no encontrada</h1>
+      <h1>Cargando rutina...</h1>
+      <p class="muted">Preparando tu entrenamiento.</p>
+    </section>
+  } @else if (vm.status === 'invalid' || vm.status === 'error' || vm.status === 'not-found') {
+    <section class="card">
+      <h1>Rutina no disponible</h1>
+      <p class="muted">{{ vm.errorMessage || 'No se pudo cargar la rutina.' }}</p>
       <a routerLink="/app/workout" class="btn btn-secondary">
         <span class="material-symbol">arrow_back</span>
-        Volver
+        Volver a registrar
+      </a>
+    </section>
+  } @else if (vm.status === 'no-exercises') {
+    <section class="card">
+      <h1>Esta rutina no tiene ejercicios todavia</h1>
+      <p class="muted">Anade ejercicios en el detalle de rutina antes de iniciar el entrenamiento.</p>
+      <a [routerLink]="['/app/routines', vm.routine?.id]" class="btn btn-primary">
+        Ir al detalle de rutina
+      </a>
+      <a routerLink="/app/workout" class="btn btn-secondary">
+        Volver a registrar
       </a>
     </section>
   } @else {
     <section class="card">
       <p class="kicker">Registrar entrenamiento</p>
-      <h1>{{ vm.routine.name }}</h1>
-      <p class="muted">{{ vm.routine.description || 'Sin descripcion' }}</p>
+      <h1>{{ vm.routine?.name }}</h1>
+      <p class="muted">{{ vm.routine?.description || 'Sin descripcion' }}</p>
     </section>
 
     <form [formGroup]="form" (ngSubmit)="saveWorkout()" class="workout-form">

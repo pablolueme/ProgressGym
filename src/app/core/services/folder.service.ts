@@ -32,20 +32,24 @@ export class FolderService {
   private readonly auth = inject(Auth);
   private readonly authService = inject(AuthService);
 
-  readonly folders$: Observable<GymFolder[]> = this.authService.uid$.pipe(
-    switchMap((uid) => {
-      if (!uid) {
-        return of([]);
-      }
-      const ref = collection(this.firestore, foldersCollectionPath(uid));
-      const foldersQuery = query(ref, orderBy('updatedAt', 'desc'));
-      return collectionData(foldersQuery, { idField: 'id' }).pipe(
-        map((items) => items.map((item) => this.mapFolder(item)))
-      );
-    })
-  );
+  readonly folders$: Observable<GymFolder[]> = this.getFolders();
 
-  folderById$(folderId: string): Observable<GymFolder | null> {
+  getFolders(): Observable<GymFolder[]> {
+    return this.authService.uid$.pipe(
+      switchMap((uid) => {
+        if (!uid) {
+          return of([]);
+        }
+        const ref = collection(this.firestore, foldersCollectionPath(uid));
+        const foldersQuery = query(ref, orderBy('updatedAt', 'desc'));
+        return collectionData(foldersQuery, { idField: 'id' }).pipe(
+          map((items) => items.map((item) => this.mapFolder(item)))
+        );
+      })
+    );
+  }
+
+  getFolderById(folderId: string): Observable<GymFolder | null> {
     return this.authService.uid$.pipe(
       switchMap((uid) => {
         if (!uid || !folderId) {
@@ -58,11 +62,20 @@ export class FolderService {
     );
   }
 
+  folderById$(folderId: string): Observable<GymFolder | null> {
+    return this.getFolderById(folderId);
+  }
+
   async createFolder(input: FolderInput): Promise<string> {
     const uid = this.requireUid();
+    const name = input.name.trim();
+    if (!name) {
+      throw new Error('El nombre de la carpeta es obligatorio.');
+    }
+
     const reference = await addDoc(collection(this.firestore, foldersCollectionPath(uid)), {
       userId: uid,
-      name: input.name.trim(),
+      name,
       description: input.description?.trim() || '',
       color: input.color?.trim() || '',
       icon: input.icon?.trim() || '',
@@ -74,8 +87,30 @@ export class FolderService {
 
   async updateFolder(folderId: string, input: Partial<FolderInput>): Promise<void> {
     const uid = this.requireUid();
+    const updates: Partial<FolderInput> = {
+      ...input
+    };
+
+    if (typeof updates.name === 'string') {
+      const normalizedName = updates.name.trim();
+      if (!normalizedName) {
+        throw new Error('El nombre de la carpeta es obligatorio.');
+      }
+      updates.name = normalizedName;
+    }
+
+    if (typeof updates.description === 'string') {
+      updates.description = updates.description.trim();
+    }
+    if (typeof updates.color === 'string') {
+      updates.color = updates.color.trim();
+    }
+    if (typeof updates.icon === 'string') {
+      updates.icon = updates.icon.trim();
+    }
+
     await updateDoc(doc(this.firestore, `${foldersCollectionPath(uid)}/${folderId}`), {
-      ...input,
+      ...updates,
       updatedAt: serverTimestamp()
     });
   }

@@ -1,11 +1,25 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { combineLatest, map } from 'rxjs';
+import { catchError, combineLatest, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
 import { Exercise, ExerciseType, Routine, RoutineExercise } from '../../../core/models';
 import { ExerciseService } from '../../../core/services/exercise.service';
+import { FolderService } from '../../../core/services/folder.service';
 import { RoutineService } from '../../../core/services/routine.service';
+import { UiToastService } from '../../../core/services/ui-toast.service';
+
+type RoutineDetailStatus = 'loading' | 'ready' | 'not-found' | 'invalid' | 'error';
+
+interface RoutineDetailViewModel {
+  status: RoutineDetailStatus;
+  routineId: string;
+  routine: Routine | null;
+  exercises: Exercise[];
+  folderName: string;
+  errorMessage: string;
+}
 
 @Component({
   selector: 'app-routine-detail-page',
@@ -16,11 +30,18 @@ import { RoutineService } from '../../../core/services/routine.service';
 })
 export class RoutineDetailPageComponent {
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly routineService = inject(RoutineService);
   private readonly exerciseService = inject(ExerciseService);
+  private readonly folderService = inject(FolderService);
+  private readonly toast = inject(UiToastService);
 
-  protected readonly routineId = this.route.snapshot.paramMap.get('routineId') ?? '';
+  private readonly routeRoutineId$ = this.route.paramMap.pipe(
+    map((params) => params.get('routineId')?.trim() ?? ''),
+    distinctUntilChanged()
+  );
+
   protected readonly exerciseTypes: ExerciseType[] = [
     'Maquina',
     'Polea',
@@ -33,10 +54,71 @@ export class RoutineDetailPageComponent {
     'Otro'
   ];
 
-  protected readonly routine$ = this.routineService.routineById$(this.routineId);
-  protected readonly exercises$ = this.exerciseService.exercises$;
-  protected readonly vm$ = combineLatest([this.routine$, this.exercises$]).pipe(
-    map(([routine, exercises]) => ({ routine, exercises }))
+  protected showEditRoutineForm = false;
+  protected showAddExerciseForm = false;
+  protected showQuickExercise = false;
+  protected activeRoutineId = '';
+
+  protected readonly vm$ = this.routeRoutineId$.pipe(
+    switchMap((routineId) => {
+      if (!routineId) {
+        return of<RoutineDetailViewModel>({
+          status: 'invalid',
+          routineId: '',
+          routine: null,
+          exercises: [],
+          folderName: '',
+          errorMessage: 'No se ha recibido un identificador de rutina valido.'
+        });
+      }
+
+      return combineLatest([
+        this.routineService.getRoutineById(routineId),
+        this.exerciseService.exercises$,
+        this.folderService.folders$
+      ]).pipe(
+        map(([routine, exercises, folders]) => {
+          if (!routine) {
+            return {
+              status: 'not-found',
+              routineId,
+              routine: null,
+              exercises: [],
+              folderName: '',
+              errorMessage: 'La rutina no existe o no tienes permisos para verla.'
+            } satisfies RoutineDetailViewModel;
+          }
+          const folderName =
+            folders.find((folder) => folder.id === routine.folderId)?.name ?? 'Sin carpeta';
+          return {
+            status: 'ready',
+            routineId,
+            routine,
+            exercises,
+            folderName,
+            errorMessage: ''
+          } satisfies RoutineDetailViewModel;
+        }),
+        startWith({
+          status: 'loading',
+          routineId,
+          routine: null,
+          exercises: [],
+          folderName: '',
+          errorMessage: ''
+        } satisfies RoutineDetailViewModel),
+        catchError((error) =>
+          of<RoutineDetailViewModel>({
+            status: 'error',
+            routineId,
+            routine: null,
+            exercises: [],
+            folderName: '',
+            errorMessage: this.getErrorMessage(error, 'No se pudo cargar la rutina.')
+          })
+        )
+      );
+    })
   );
 
   protected readonly routineForm = this.fb.nonNullable.group({
@@ -61,17 +143,35 @@ export class RoutineDetailPageComponent {
     description: ['']
   });
 
-  protected showQuickExercise = false;
-  protected message = '';
-  protected isError = false;
-
-  protected setRoutineForm(routine: Routine): void {
-    this.routineForm.patchValue({
-      name: routine.name,
-      description: routine.description ?? '',
-      day: routine.day ?? '',
-      notes: routine.notes ?? ''
+  constructor() {
+    this.vm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((vm) => {
+      if (vm.status !== 'ready' || !vm.routine) {
+        return;
+      }
+      if (this.activeRoutineId !== vm.routine.id) {
+        this.resetPanels();
+        this.activeRoutineId = vm.routine.id;
+      }
+      this.setRoutineForm(vm.routine);
     });
+  }
+
+  protected toggleEditRoutineForm(routine: Routine): void {
+    this.setRoutineForm(routine);
+    this.showEditRoutineForm = !this.showEditRoutineForm;
+    if (this.showEditRoutineForm) {
+      this.showAddExerciseForm = false;
+      this.showQuickExercise = false;
+    }
+  }
+
+  protected toggleAddExerciseForm(): void {
+    this.showAddExerciseForm = !this.showAddExerciseForm;
+    if (this.showAddExerciseForm) {
+      this.showEditRoutineForm = false;
+    } else {
+      this.showQuickExercise = false;
+    }
   }
 
   protected async saveRoutineInfo(routine: Routine): Promise<void> {
@@ -84,9 +184,10 @@ export class RoutineDetailPageComponent {
         folderId: routine.folderId,
         ...this.routineForm.getRawValue()
       });
-      this.setMessage('Rutina actualizada.');
+      this.toast.success('Rutina actualizada.');
+      this.showEditRoutineForm = false;
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error(this.getErrorMessage(error, 'No se pudo actualizar la rutina.'));
     }
   }
 
@@ -99,7 +200,7 @@ export class RoutineDetailPageComponent {
       (exercise) => exercise.id === this.addExerciseForm.controls.exerciseId.value
     );
     if (!selectedExercise) {
-      this.setMessage('Selecciona un ejercicio valido.', true);
+      this.toast.error('No se ha seleccionado un ejercicio valido.');
       return;
     }
 
@@ -176,26 +277,40 @@ export class RoutineDetailPageComponent {
         description: ''
       });
       this.showQuickExercise = false;
-      this.setMessage('Ejercicio creado y anadido a la rutina.');
+      this.toast.success('Ejercicio creado y anadido a la rutina.');
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error(this.getErrorMessage(error, 'No se pudo crear el ejercicio rapido.'));
     }
   }
 
-  private async saveRoutineExercises(
-    routine: Routine,
-    exercises: RoutineExercise[]
-  ): Promise<void> {
+  private setRoutineForm(routine: Routine): void {
+    this.routineForm.patchValue({
+      name: routine.name,
+      description: routine.description ?? '',
+      day: routine.day ?? '',
+      notes: routine.notes ?? ''
+    });
+  }
+
+  private resetPanels(): void {
+    this.showEditRoutineForm = false;
+    this.showAddExerciseForm = false;
+    this.showQuickExercise = false;
+  }
+
+  private async saveRoutineExercises(routine: Routine, exercises: RoutineExercise[]): Promise<void> {
     try {
       await this.routineService.saveRoutineExercises(routine.id, exercises);
-      this.setMessage('Ejercicios de rutina actualizados.');
+      this.toast.success('Rutina actualizada.');
     } catch (error) {
-      this.setMessage((error as Error).message, true);
+      this.toast.error(this.getErrorMessage(error, 'No se pudieron guardar los ejercicios.'));
     }
   }
 
-  private setMessage(message: string, isError = false): void {
-    this.message = message;
-    this.isError = isError;
+  private getErrorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return fallback;
   }
 }

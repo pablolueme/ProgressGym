@@ -1,12 +1,25 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
-import { combineLatest, map } from 'rxjs';
+import { Router, RouterLink } from '@angular/router';
+import { catchError, combineLatest, map, of, startWith } from 'rxjs';
 import { GymFolder } from '../../../core/models';
 import { FolderService } from '../../../core/services/folder.service';
 import { RoutineService } from '../../../core/services/routine.service';
 import { UiToastService } from '../../../core/services/ui-toast.service';
+
+type FoldersStatus = 'loading' | 'ready' | 'error';
+
+interface FolderCardViewModel extends GymFolder {
+  routinesCount: number;
+  accentColor: string;
+}
+
+interface FoldersViewModel {
+  status: FoldersStatus;
+  folders: FolderCardViewModel[];
+  errorMessage: string;
+}
 
 @Component({
   selector: 'app-folders-page',
@@ -17,11 +30,12 @@ import { UiToastService } from '../../../core/services/ui-toast.service';
 })
 export class FoldersPageComponent {
   private readonly fb = inject(FormBuilder);
+  private readonly router = inject(Router);
   private readonly folderService = inject(FolderService);
   private readonly routineService = inject(RoutineService);
   private readonly toast = inject(UiToastService);
 
-  protected readonly folders$ = combineLatest([
+  protected readonly vm$ = combineLatest([
     this.folderService.folders$,
     this.routineService.routines$
   ]).pipe(
@@ -31,13 +45,34 @@ export class FoldersPageComponent {
         routinesPerFolder.set(routine.folderId, (routinesPerFolder.get(routine.folderId) ?? 0) + 1);
       });
 
-      return folders.map((folder) => ({
+      const folderCards: FolderCardViewModel[] = folders.map((folder) => ({
         ...folder,
         routinesCount: routinesPerFolder.get(folder.id) ?? 0,
         icon: folder.icon || 'folder',
         accentColor: folder.color || '#22c55e'
       }));
-    })
+
+      return {
+        status: 'ready',
+        folders: folderCards,
+        errorMessage: ''
+      } satisfies FoldersViewModel;
+    }),
+    startWith({
+      status: 'loading',
+      folders: [],
+      errorMessage: ''
+    } satisfies FoldersViewModel),
+    catchError((error) =>
+      of<FoldersViewModel>({
+        status: 'error',
+        folders: [],
+        errorMessage:
+          error instanceof Error && error.message
+            ? error.message
+            : 'No se pudieron cargar las carpetas.'
+      })
+    )
   );
 
   protected editingFolderId: string | null = null;
@@ -110,6 +145,10 @@ export class FoldersPageComponent {
 
   protected cancelEdit(): void {
     this.resetForm();
+  }
+
+  protected async goToFolder(folderId: string): Promise<void> {
+    await this.router.navigate(['/app/folders', folderId]);
   }
 
   private resetForm(): void {

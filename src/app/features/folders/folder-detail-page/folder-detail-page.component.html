@@ -1,76 +1,91 @@
 @if (vm$ | async; as vm) {
-  @if (!vm.folder) {
+  @if (vm.status === 'loading') {
     <section class="card">
-      <h1>Carpeta no encontrada</h1>
-      <a routerLink="/app/folders" class="btn btn-secondary">Volver</a>
+      <h1>Cargando carpeta...</h1>
+      <p class="muted">Estamos recuperando la informacion y las rutinas.</p>
+    </section>
+  } @else if (vm.status === 'invalid' || vm.status === 'error' || vm.status === 'not-found') {
+    <section class="card">
+      <h1>Carpeta no disponible</h1>
+      <p class="muted">
+        {{
+          vm.errorMessage ||
+            'No se pudo abrir esta carpeta. Vuelve a la lista e intentalo de nuevo.'
+        }}
+      </p>
+      <a routerLink="/app/folders" class="btn btn-secondary">Volver a carpetas</a>
     </section>
   } @else {
-    <section class="card">
+    <section class="card folder-hero">
       <p class="kicker">Detalle de carpeta</p>
-      <h1>{{ vm.folder.name }}</h1>
-      <p class="muted">{{ vm.folder.description || 'Sin descripcion' }}</p>
+      <h1>{{ vm.folder?.name }}</h1>
+      <p class="muted">{{ vm.folder?.description || 'Sin descripcion' }}</p>
+      <p class="meta">{{ vm.routines.length }} rutinas</p>
       <div class="row-actions">
-        <a routerLink="/app/folders" class="btn btn-secondary">Volver</a>
-        <button type="button" class="btn btn-danger" (click)="deleteFolder(vm.folder.name)">
+        <button type="button" class="btn btn-primary" (click)="openCreateRoutineForm()">
+          Nueva rutina
+        </button>
+        <a routerLink="/app/folders" class="btn btn-secondary">Volver a carpetas</a>
+        <button type="button" class="btn btn-danger" (click)="deleteFolder(vm.folder?.name ?? '')">
           Eliminar carpeta
         </button>
       </div>
     </section>
 
-    <section class="card">
-      <h2>{{ editingRoutineId ? 'Editar rutina' : 'Crear rutina' }}</h2>
-      <form [formGroup]="form" (ngSubmit)="submitRoutine()" class="form-grid">
-        <label>
-          Nombre
-          <input type="text" formControlName="name" placeholder="Pecho pesado" />
-        </label>
-        <label>
-          Descripcion
-          <input type="text" formControlName="description" placeholder="Opcional" />
-        </label>
-        <label>
-          Dia
-          <input type="text" formControlName="day" placeholder="Lunes" />
-        </label>
-        <label>
-          Notas
-          <textarea formControlName="notes" rows="3"></textarea>
-        </label>
+    @if (isRoutineFormOpen) {
+      <section class="card">
+        <h2>{{ editingRoutineId ? 'Editar rutina' : 'Nueva rutina' }}</h2>
+        <form [formGroup]="form" (ngSubmit)="submitRoutine()" class="form-grid">
+          <label>
+            Nombre
+            <input type="text" formControlName="name" placeholder="Pecho pesado" />
+          </label>
+          <label>
+            Descripcion
+            <input type="text" formControlName="description" placeholder="Opcional" />
+          </label>
+          <label>
+            Dia
+            <input type="text" formControlName="day" placeholder="Lunes" />
+          </label>
+          <label>
+            Notas
+            <textarea formControlName="notes" rows="3"></textarea>
+          </label>
 
-        <div class="row-actions">
-          <button type="submit" class="btn btn-primary">
-            {{ editingRoutineId ? 'Actualizar rutina' : 'Crear rutina' }}
-          </button>
-          @if (editingRoutineId) {
-            <button type="button" class="btn btn-secondary" (click)="cancelEdition()">Cancelar</button>
-          }
-        </div>
-      </form>
-      @if (message) {
-        <p class="message" [class.error]="isError">{{ message }}</p>
-      }
-    </section>
+          <div class="row-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="isSubmitting">
+              {{ isSubmitting ? 'Guardando...' : editingRoutineId ? 'Actualizar' : 'Crear rutina' }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelRoutineForm()">Cancelar</button>
+          </div>
+        </form>
+      </section>
+    }
 
     <section class="cards-list">
       <h2>Rutinas en esta carpeta</h2>
       @if (!vm.routines.length) {
-        <article class="card">
-          <p class="muted">Todavia no hay rutinas.</p>
+        <article class="card empty-card">
+          <p class="muted">Esta carpeta todavia no tiene rutinas.</p>
+          <button type="button" class="btn btn-primary" (click)="openCreateRoutineForm()">
+            Crear primera rutina
+          </button>
         </article>
       } @else {
         @for (routine of vm.routines; track routine.id) {
           <article class="card routine-card">
-            <div>
+            <div class="routine-main">
               <h3>{{ routine.name }}</h3>
               <p class="muted">{{ routine.description || 'Sin descripcion' }}</p>
-              <p class="muted">Ejercicios: {{ routine.exercises.length }}</p>
+              <p class="meta">{{ routine.exercises.length }} ejercicios</p>
             </div>
             <div class="row-actions">
+              <a [routerLink]="['/app/routines', routine.id]" class="btn btn-secondary">Abrir</a>
               <a [routerLink]="['/app/workout/start', routine.id]" class="btn btn-primary">
                 Iniciar entrenamiento
               </a>
-              <a [routerLink]="['/app/routines', routine.id]" class="btn btn-secondary">Abrir</a>
-              <button type="button" class="btn btn-secondary" (click)="editRoutine(routine)">
+              <button type="button" class="btn btn-secondary" (click)="startEditRoutine(routine)">
                 Editar
               </button>
               <button type="button" class="btn btn-danger" (click)="deleteRoutine(routine)">

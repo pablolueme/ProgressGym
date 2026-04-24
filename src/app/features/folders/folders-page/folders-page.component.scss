@@ -58,11 +58,15 @@ label {
   border-left: 3px solid var(--folder-accent);
   display: grid;
   gap: 0.85rem;
+  cursor: pointer;
+}
+
+.folder-card:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--folder-accent) 65%, white 15%);
+  outline-offset: 2px;
 }
 
 .folder-main {
-  text-decoration: none;
-  color: inherit;
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.75rem;

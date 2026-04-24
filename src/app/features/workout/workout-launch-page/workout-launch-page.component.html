@@ -5,22 +5,30 @@
 </section>
 
 <section class="routine-list">
-  @if (vm$ | async; as routines) {
-    @if (!routines.length) {
+  @if (vm$ | async; as vm) {
+    @if (vm.status === 'loading') {
+      <article class="card">
+        <p class="muted">Cargando rutinas...</p>
+      </article>
+    } @else if (vm.status === 'error') {
+      <article class="card">
+        <p class="muted">{{ vm.errorMessage || 'No se pudieron cargar las rutinas.' }}</p>
+      </article>
+    } @else if (!vm.routines.length) {
       <article class="empty-state">
         <span class="material-symbol">fitness_center</span>
-        <p class="muted">No hay rutinas disponibles. Crea una desde carpetas para empezar a registrar.</p>
+        <p class="muted">Todavia no tienes rutinas.</p>
         <a routerLink="/app/folders" class="btn btn-primary">
           <span class="material-symbol">folder_open</span>
-          Ir a carpetas
+          Crear rutina
         </a>
       </article>
     } @else {
-      @for (item of routines; track item.routine.id) {
+      @for (item of vm.routines; track item.routineId) {
         <article class="card routine-card">
           <div class="routine-head">
-            <h2>{{ item.routine.name }}</h2>
-            <p class="muted">{{ item.routine.description || 'Rutina lista para entrenar.' }}</p>
+            <h2>{{ item.routineName }}</h2>
+            <p class="muted">{{ item.routineDescription || 'Rutina lista para entrenar.' }}</p>
           </div>
 
           <div class="meta-grid">
@@ -43,11 +51,11 @@
           </div>
 
           <div class="row-actions">
-            <a [routerLink]="['/app/routines', item.routine.id]" class="btn btn-secondary">
+            <a [routerLink]="['/app/routines', item.routineId]" class="btn btn-secondary">
               <span class="material-symbol">visibility</span>
-              Ver rutina
+              Abrir
             </a>
-            <a [routerLink]="['/app/workout/start', item.routine.id]" class="btn btn-primary cta-btn">
+            <a [routerLink]="['/app/workout/start', item.routineId]" class="btn btn-primary cta-btn">
               <span class="material-symbol">play_arrow</span>
               Iniciar entrenamiento
             </a>

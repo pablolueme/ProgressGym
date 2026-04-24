@@ -49,8 +49,16 @@
 }
 
 <section class="cards-list">
-  @if (folders$ | async; as folders) {
-    @if (!folders.length) {
+  @if (vm$ | async; as vm) {
+    @if (vm.status === 'loading') {
+      <article class="card">
+        <p class="muted">Cargando carpetas...</p>
+      </article>
+    } @else if (vm.status === 'error') {
+      <article class="card">
+        <p class="muted">{{ vm.errorMessage || 'No se pudieron cargar las carpetas.' }}</p>
+      </article>
+    } @else if (!vm.folders.length) {
       <article class="empty-state">
         <span class="material-symbol">folder_open</span>
         <p class="muted">Aun no hay carpetas. Crea la primera para empezar a estructurar tus rutinas.</p>
@@ -60,9 +68,16 @@
         </button>
       </article>
     } @else {
-      @for (folder of folders; track folder.id) {
-        <article class="card folder-card" [style.--folder-accent]="folder.accentColor">
-          <a [routerLink]="['/app/folders', folder.id]" class="folder-main">
+      @for (folder of vm.folders; track folder.id) {
+        <article
+          class="card folder-card"
+          [style.--folder-accent]="folder.accentColor"
+          role="link"
+          tabindex="0"
+          (click)="goToFolder(folder.id)"
+          (keydown.enter)="goToFolder(folder.id)"
+        >
+          <div class="folder-main">
             <span class="icon-wrap">
               <span class="material-symbol">{{ folder.icon }}</span>
             </span>
@@ -71,17 +86,17 @@
               <p class="muted">{{ folder.description || 'Sin descripcion' }}</p>
               <p class="folder-meta">{{ folder.routinesCount }} rutinas</p>
             </div>
-          </a>
+          </div>
           <div class="row-actions">
-            <a [routerLink]="['/app/folders', folder.id]" class="btn btn-secondary">
+            <a [routerLink]="['/app/folders', folder.id]" class="btn btn-secondary" (click)="$event.stopPropagation()">
               <span class="material-symbol">open_in_new</span>
               Abrir
             </a>
-            <button type="button" class="btn btn-secondary" (click)="startEdit(folder)">
+            <button type="button" class="btn btn-secondary" (click)="startEdit(folder); $event.stopPropagation()">
               <span class="material-symbol">edit</span>
               Editar
             </button>
-            <button type="button" class="btn btn-danger" (click)="remove(folder)">
+            <button type="button" class="btn btn-danger" (click)="remove(folder); $event.stopPropagation()">
               <span class="material-symbol">delete</span>
               Eliminar
             </button>
