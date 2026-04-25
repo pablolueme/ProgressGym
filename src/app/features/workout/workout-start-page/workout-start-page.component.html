@@ -32,7 +32,13 @@
     </section>
 
     <form [formGroup]="form" (ngSubmit)="saveWorkout()" class="workout-form">
-      @for (entry of entriesArray.controls; track $index; let i = $index) {
+      @if (formMessage) {
+        <section class="card">
+          <p class="message error">{{ formMessage }}</p>
+        </section>
+      }
+
+      @for (entry of entriesArray.controls; track entry; let i = $index) {
         <article class="card">
           @let stats = getExercisePerformance(entry.controls.exerciseId.value);
           <h2>{{ entry.controls.exerciseName.value }}</h2>
@@ -48,17 +54,17 @@
           <div formArrayName="entries">
             <div [formGroupName]="i">
               <div formArrayName="sets" class="sets-list">
-                @for (set of setsArray(i).controls; track $index; let j = $index) {
+                @for (set of setsArray(i).controls; track set; let j = $index) {
                   <div class="set-row" [formGroupName]="j">
                     <h3>Serie {{ set.controls.setNumber.value }}</h3>
                     <div class="set-grid">
                       <label>
                         Peso (kg)
-                        <input type="number" formControlName="weight" step="0.5" />
+                        <input type="number" formControlName="weight" step="0.5" min="0" />
                       </label>
                       <label>
                         Reps
-                        <input type="number" formControlName="reps" />
+                        <input type="number" formControlName="reps" min="1" />
                       </label>
                       <label>
                         RPE

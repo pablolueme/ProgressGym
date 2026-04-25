@@ -18,8 +18,8 @@ import { ExercisePerformance, WorkoutService } from '../../../core/services/work
 
 type SetForm = FormGroup<{
   setNumber: FormControl<number>;
-  weight: FormControl<number>;
-  reps: FormControl<number>;
+  weight: FormControl<number | null>;
+  reps: FormControl<number | null>;
   rpe: FormControl<number | null>;
   rir: FormControl<number | null>;
   notes: FormControl<string>;
@@ -135,6 +135,7 @@ export class WorkoutStartPageComponent {
   protected performanceMap = new Map<string, ExercisePerformance>();
   protected loadedRoutineId = '';
   protected isSaving = false;
+  protected formMessage = '';
 
   constructor() {
     this.vm$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((vm) => {
@@ -163,16 +164,15 @@ export class WorkoutStartPageComponent {
   }
 
   protected addSet(entryIndex: number): void {
+    this.clearFormMessage();
     const sets = this.setsArray(entryIndex);
     const setNumber = sets.length + 1;
     sets.push(this.createSetForm(setNumber, null));
   }
 
   protected removeSet(entryIndex: number, setIndex: number): void {
+    this.clearFormMessage();
     const sets = this.setsArray(entryIndex);
-    if (sets.length <= 1) {
-      return;
-    }
     sets.removeAt(setIndex);
     sets.controls.forEach((control, index) => {
       control.controls.setNumber.setValue(index + 1);
@@ -180,6 +180,7 @@ export class WorkoutStartPageComponent {
   }
 
   protected copyPreviousWeight(entryIndex: number, setIndex: number): void {
+    this.clearFormMessage();
     if (setIndex === 0) {
       return;
     }
@@ -194,27 +195,22 @@ export class WorkoutStartPageComponent {
 
   protected async saveWorkout(): Promise<void> {
     if (!this.currentRoutine || this.entriesArray.length === 0) {
-      this.toast.error('No puedes iniciar entrenamiento sin ejercicios en la rutina.');
+      this.showValidationError('Añade al menos una serie antes de guardar.');
       return;
     }
-    if (this.form.invalid || this.isSaving) {
-      this.form.markAllAsTouched();
+    if (this.isSaving) {
       return;
     }
 
-    const entries: WorkoutEntry[] = this.entriesArray.controls.map((entry) => ({
-      exerciseId: entry.controls.exerciseId.value,
-      exerciseName: entry.controls.exerciseName.value,
-      notes: entry.controls.notes.value,
-      sets: entry.controls.sets.controls.map((set, index) => ({
-        setNumber: index + 1,
-        weight: set.controls.weight.value,
-        reps: set.controls.reps.value,
-        rpe: set.controls.rpe.value ?? undefined,
-        rir: set.controls.rir.value ?? undefined,
-        notes: set.controls.notes.value || undefined
-      }))
-    }));
+    this.clearFormMessage();
+    const entries = this.buildEntriesForSave();
+    if (!entries) {
+      return;
+    }
+    if (!entries.length) {
+      this.showValidationError('Añade al menos una serie con peso y repeticiones.');
+      return;
+    }
 
     this.isSaving = true;
     try {
@@ -223,10 +219,12 @@ export class WorkoutStartPageComponent {
         entries,
         this.form.controls.notes.value
       );
+      this.clearFormMessage();
       this.toast.success('Entrenamiento guardado.');
       await this.router.navigate(['/app/history', workoutId]);
     } catch (error) {
-      this.toast.error(this.getErrorMessage(error, 'No se pudo guardar el entrenamiento.'));
+      console.error('Error al guardar entrenamiento:', error);
+      this.showValidationError('No se ha podido guardar el entrenamiento. Revisa los datos.');
     } finally {
       this.isSaving = false;
     }
@@ -250,11 +248,12 @@ export class WorkoutStartPageComponent {
     orderedExercises.forEach((routineExercise) => {
       const performance = this.performanceMap.get(routineExercise.exerciseId);
       const sets = this.fb.array<SetForm>([]);
-      const initialWeight = performance?.lastWeight ?? 0;
+      const initialWeight = performance?.lastWeight ?? null;
 
       const totalSets = Math.max(1, routineExercise.sets);
       for (let index = 0; index < totalSets; index += 1) {
-        sets.push(this.createSetForm(index + 1, initialWeight));
+        const suggestedWeight = index === 0 ? initialWeight : null;
+        sets.push(this.createSetForm(index + 1, suggestedWeight));
       }
 
       this.entriesArray.push(
@@ -274,12 +273,102 @@ export class WorkoutStartPageComponent {
   private createSetForm(setNumber: number, initialWeight: number | null): SetForm {
     return this.fb.group({
       setNumber: this.fb.nonNullable.control(setNumber),
-      weight: this.fb.nonNullable.control(initialWeight ?? 0, [Validators.min(0)]),
-      reps: this.fb.nonNullable.control(0, [Validators.min(0)]),
+      weight: this.fb.control<number | null>(initialWeight, [Validators.min(0)]),
+      reps: this.fb.control<number | null>(null, [Validators.min(1)]),
       rpe: this.fb.control<number | null>(null),
       rir: this.fb.control<number | null>(null),
       notes: this.fb.nonNullable.control('')
     });
+  }
+
+  private buildEntriesForSave(): WorkoutEntry[] | null {
+    const validEntries: WorkoutEntry[] = [];
+
+    for (const entry of this.entriesArray.controls) {
+      const sets = entry.controls.sets;
+      for (let setIndex = sets.length - 1; setIndex >= 0; setIndex -= 1) {
+        const set = sets.at(setIndex);
+        const weight = this.toNumberOrNull(set.controls.weight.value);
+        const reps = this.toNumberOrNull(set.controls.reps.value);
+
+        const hasWeight = weight !== null;
+        const hasReps = reps !== null;
+
+        if (!hasWeight && !hasReps) {
+          sets.removeAt(setIndex);
+          continue;
+        }
+
+        if (!hasWeight || !hasReps) {
+          this.showValidationError('Completa peso y repeticiones o elimina la serie.');
+          return null;
+        }
+
+        if (weight < 0 || reps <= 0) {
+          this.showValidationError('El peso debe ser 0 o mayor y las repeticiones mayores que 0.');
+          return null;
+        }
+      }
+
+      sets.controls.forEach((setControl, index) => {
+        setControl.controls.setNumber.setValue(index + 1);
+      });
+
+      const validSets = sets.controls.map((set, index) => {
+        const weight = this.toNumberOrNull(set.controls.weight.value);
+        const reps = this.toNumberOrNull(set.controls.reps.value);
+
+        if (weight === null || reps === null) {
+          return null;
+        }
+
+        return {
+          setNumber: index + 1,
+          weight,
+          reps,
+          rpe: this.toNumberOrUndefined(set.controls.rpe.value),
+          rir: this.toNumberOrUndefined(set.controls.rir.value),
+          notes: set.controls.notes.value.trim() || undefined
+        };
+      });
+
+      const filteredSets = validSets.filter((set): set is NonNullable<typeof set> => set !== null);
+      if (!filteredSets.length) {
+        continue;
+      }
+
+      validEntries.push({
+        exerciseId: entry.controls.exerciseId.value,
+        exerciseName: entry.controls.exerciseName.value,
+        notes: entry.controls.notes.value.trim() || undefined,
+        sets: filteredSets
+      });
+    }
+
+    return validEntries;
+  }
+
+  private toNumberOrNull(value: number | null): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    return Number.isFinite(value) ? value : null;
+  }
+
+  private toNumberOrUndefined(value: number | null): number | undefined {
+    if (value === null || value === undefined) {
+      return undefined;
+    }
+    return Number.isFinite(value) ? value : undefined;
+  }
+
+  private showValidationError(message: string): void {
+    this.formMessage = message;
+    this.toast.error(message);
+  }
+
+  private clearFormMessage(): void {
+    this.formMessage = '';
   }
 
   private getErrorMessage(error: unknown, fallback: string): string {

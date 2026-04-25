@@ -13,6 +13,19 @@ h3 {
   color: var(--text-muted);
 }
 
+.message {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.message.error {
+  color: #fecaca;
+  background: #7f1d1d;
+  border: 1px solid #ef4444;
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.7rem;
+}
+
 .workout-form {
   display: grid;
   gap: 0.9rem;

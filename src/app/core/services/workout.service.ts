@@ -65,7 +65,26 @@ export class WorkoutService {
     notes: string
   ): Promise<string> {
     const uid = this.requireUid();
-    const totalVolume = entries.reduce((sum, entry) => {
+    const sanitizedEntries = entries
+      .map((entry) => ({
+        ...entry,
+        notes: entry.notes?.trim(),
+        sets: entry.sets
+          .filter((set) => Number.isFinite(set.weight) && Number.isFinite(set.reps))
+          .filter((set) => set.weight >= 0 && set.reps > 0)
+          .map((set, index) => ({
+            ...set,
+            setNumber: index + 1,
+            notes: set.notes?.trim()
+          }))
+      }))
+      .filter((entry) => entry.sets.length > 0);
+
+    if (!sanitizedEntries.length) {
+      throw new Error('Anade al menos una serie con peso y repeticiones.');
+    }
+
+    const totalVolume = sanitizedEntries.reduce((sum, entry) => {
       const entryVolume = entry.sets.reduce((entrySum, set) => entrySum + set.weight * set.reps, 0);
       return sum + entryVolume;
     }, 0);
@@ -76,7 +95,7 @@ export class WorkoutService {
       routineName: routine.name,
       folderId: routine.folderId,
       date: new Date(),
-      entries,
+      entries: sanitizedEntries,
       notes: notes.trim(),
       totalVolume,
       createdAt: serverTimestamp()
