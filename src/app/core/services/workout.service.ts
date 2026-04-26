@@ -66,19 +66,59 @@ export class WorkoutService {
   ): Promise<string> {
     const uid = this.requireUid();
     const sanitizedEntries = entries
-      .map((entry) => ({
-        ...entry,
-        notes: entry.notes?.trim(),
-        sets: entry.sets
+      .map((entry) => {
+        const setPayloads = entry.sets
           .filter((set) => Number.isFinite(set.weight) && Number.isFinite(set.reps))
           .filter((set) => set.weight >= 0 && set.reps > 0)
-          .map((set, index) => ({
-            ...set,
-            setNumber: index + 1,
-            notes: set.notes?.trim()
-          }))
-      }))
-      .filter((entry) => entry.sets.length > 0);
+          .map((set, index) => {
+            const payload: {
+              setNumber: number;
+              weight: number;
+              reps: number;
+              rpe?: number;
+              rir?: number;
+              notes?: string;
+            } = {
+              setNumber: index + 1,
+              weight: set.weight,
+              reps: set.reps
+            };
+
+            if (typeof set.rpe === 'number' && Number.isFinite(set.rpe)) {
+              payload.rpe = set.rpe;
+            }
+            if (typeof set.rir === 'number' && Number.isFinite(set.rir)) {
+              payload.rir = set.rir;
+            }
+            const trimmedSetNotes = set.notes?.trim();
+            if (trimmedSetNotes) {
+              payload.notes = trimmedSetNotes;
+            }
+            return payload;
+          });
+
+        if (!setPayloads.length) {
+          return null;
+        }
+
+        const payload: {
+          exerciseId: string;
+          exerciseName: string;
+          sets: typeof setPayloads;
+          notes?: string;
+        } = {
+          exerciseId: entry.exerciseId,
+          exerciseName: entry.exerciseName,
+          sets: setPayloads
+        };
+
+        const trimmedEntryNotes = entry.notes?.trim();
+        if (trimmedEntryNotes) {
+          payload.notes = trimmedEntryNotes;
+        }
+        return payload;
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
 
     if (!sanitizedEntries.length) {
       throw new Error('Anade al menos una serie con peso y repeticiones.');
