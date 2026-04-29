@@ -15,6 +15,7 @@ export class AppLayoutComponent {
     { icon: 'home', label: 'Inicio', route: '/app/home' },
     { icon: 'folder', label: 'Carpetas', route: '/app/folders' },
     { icon: 'edit_note', label: 'Registrar', route: '/app/workout' },
+    { icon: 'history', label: 'Historial', route: '/app/history' },
     { icon: 'timeline', label: 'Progreso', route: '/app/progress' },
     { icon: 'person', label: 'Perfil', route: '/app/profile' }
   ];

@@ -13,6 +13,7 @@ export class BottomNavComponent {
     { label: 'Inicio', icon: 'home', route: '/app/home' },
     { label: 'Carpetas', icon: 'folder', route: '/app/folders' },
     { label: 'Registrar', icon: 'edit_note', route: '/app/workout' },
+    { label: 'Historial', icon: 'history', route: '/app/history' },
     { label: 'Progreso', icon: 'timeline', route: '/app/progress' },
     { label: 'Perfil', icon: 'person', route: '/app/profile' }
   ];
