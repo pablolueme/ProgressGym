@@ -1,23 +1,36 @@
-@if (workout$ | async; as workout) {
-  @if (!workout) {
+@if (vm$ | async; as vm) {
+  @if (vm.status === 'loading') {
+    <section class="card">
+      <h1>Cargando entrenamiento...</h1>
+      <p class="muted">Recuperando detalle del historial.</p>
+    </section>
+  } @else if (vm.status === 'error' || vm.status === 'not-found' || !vm.workout) {
     <section class="card">
       <h1>Entrenamiento no encontrado</h1>
+      <p class="muted">{{ vm.errorMessage || 'No se pudo abrir el detalle del entrenamiento.' }}</p>
       <a routerLink="/app/history" class="btn btn-secondary">Volver</a>
     </section>
   } @else {
     <section class="card">
       <p class="kicker">Detalle historial</p>
-      <h1>{{ workout.routineName }}</h1>
-      <p class="muted">{{ workout.date | date: 'fullDate' }}</p>
-      <p class="muted">Volumen total: {{ workout.totalVolume || 0 | number: '1.0-0' }}</p>
-      @if (workout.notes) {
-        <p class="muted">{{ workout.notes }}</p>
+      <h1>{{ vm.workout.routineName }}</h1>
+      <p class="muted">
+        {{ vm.workout.status === 'COMPLETED' ? 'Completado' : 'En curso' }}
+        · {{ (vm.workout.completedAt || vm.workout.date) | date: 'fullDate' }}
+      </p>
+      <p class="muted">Volumen total: {{ vm.workout.totalVolume || 0 | number: '1.0-0' }}</p>
+      @if (vm.workout.notes) {
+        <p class="muted">{{ vm.workout.notes }}</p>
       }
       <div class="row-actions">
         <a routerLink="/app/history" class="btn btn-secondary">Volver</a>
-        <button type="button" class="btn btn-primary" (click)="repeatWorkout(workout.routineId)">
-          Repetir entrenamiento
-        </button>
+        @if (vm.workout.status === 'IN_PROGRESS') {
+          <a [routerLink]="['/app/workout/continue', vm.workout.id]" class="btn btn-primary">Continuar entrenamiento</a>
+        } @else {
+          <button type="button" class="btn btn-primary" (click)="repeatWorkout(vm.workout.routineId)">
+            Repetir entrenamiento
+          </button>
+        }
         <button type="button" class="btn btn-danger" (click)="deleteWorkout()">
           Eliminar entrenamiento
         </button>
@@ -25,7 +38,7 @@
     </section>
 
     <section class="entries-list">
-      @for (entry of workout.entries; track entry.exerciseId) {
+      @for (entry of vm.workout.entries; track entry.exerciseId) {
         <article class="card">
           <h2>{{ entry.exerciseName }}</h2>
           @if (entry.notes) {
@@ -35,7 +48,7 @@
             @for (set of entry.sets; track set.setNumber) {
               <div class="set-item">
                 <p>Serie {{ set.setNumber }}</p>
-                <p>{{ set.weight }} kg · {{ set.reps }} reps</p>
+                <p>{{ set.weight ?? '-' }} kg · {{ set.reps ?? '-' }} reps</p>
                 <p>RPE: {{ set.rpe ?? '-' }} · RIR: {{ set.rir ?? '-' }}</p>
                 @if (set.notes) {
                   <p>{{ set.notes }}</p>

@@ -1,131 +1,137 @@
-@if (vm$ | async; as vm) {
-  @if (vm.status === 'loading') {
-    <section class="card">
-      <h1>Cargando rutina...</h1>
-      <p class="muted">Preparando tu entrenamiento.</p>
-    </section>
-  } @else if (vm.status === 'invalid' || vm.status === 'error' || vm.status === 'not-found') {
-    <section class="card">
-      <h1>Rutina no disponible</h1>
-      <p class="muted">{{ vm.errorMessage || 'No se pudo cargar la rutina.' }}</p>
-      <a routerLink="/app/workout" class="btn btn-secondary">
-        <span class="material-symbol">arrow_back</span>
-        Volver a registrar
-      </a>
-    </section>
-  } @else if (vm.status === 'no-exercises') {
-    <section class="card">
-      <h1>Esta rutina no tiene ejercicios todavia</h1>
-      <p class="muted">Anade ejercicios en el detalle de rutina antes de iniciar el entrenamiento.</p>
-      <a [routerLink]="['/app/routines', vm.routine?.id]" class="btn btn-primary">
-        Ir al detalle de rutina
-      </a>
-      <a routerLink="/app/workout" class="btn btn-secondary">
-        Volver a registrar
-      </a>
-    </section>
-  } @else {
-    <section class="card">
-      <p class="kicker">Registrar entrenamiento</p>
-      <h1>{{ vm.routine?.name }}</h1>
-      <p class="muted">{{ vm.routine?.description || 'Sin descripcion' }}</p>
-    </section>
+@if (status === 'loading') {
+  <section class="card">
+    <h1>Cargando entrenamiento...</h1>
+    <p class="muted">Preparando tu sesion en curso.</p>
+  </section>
+} @else if (status === 'invalid' || status === 'error' || status === 'not-found') {
+  <section class="card">
+    <h1>Entrenamiento no disponible</h1>
+    <p class="muted">{{ errorMessage || 'No se pudo cargar el entrenamiento.' }}</p>
+    <a routerLink="/app/workout" class="btn btn-secondary">
+      <span class="material-symbol">arrow_back</span>
+      Volver a registrar
+    </a>
+  </section>
+} @else if (status === 'no-exercises') {
+  <section class="card">
+    <h1>Esta rutina no tiene ejercicios todavia</h1>
+    <p class="muted">Anade ejercicios en el detalle de rutina antes de iniciar el entrenamiento.</p>
+    <a [routerLink]="['/app/routines', currentRoutine?.id]" class="btn btn-primary">Ir al detalle de rutina</a>
+    <a routerLink="/app/workout" class="btn btn-secondary">Volver a registrar</a>
+  </section>
+} @else {
+  <section class="card">
+    <p class="kicker">Entrenamiento en curso</p>
+    <h1>{{ workoutTitle }}</h1>
+    <p class="muted">{{ currentRoutine?.description || 'Sin descripcion' }}</p>
+    @if (activeWorkout) {
+      <p class="muted">
+        Inicio: {{ activeWorkout.startedAt | date: 'short' }}
+        @if (activeWorkout.lastSavedAt) {
+          - Ultimo guardado: {{ activeWorkout.lastSavedAt | date: 'short' }}
+        }
+      </p>
+    }
+  </section>
 
-    <form [formGroup]="form" (ngSubmit)="saveWorkout()" class="workout-form">
-      @if (formMessage) {
-        <section class="card">
-          <p class="message error">{{ formMessage }}</p>
-        </section>
-      }
-
-      @for (entry of entriesArray.controls; track entry; let i = $index) {
-        <article class="card">
-          @let stats = getExercisePerformance(entry.controls.exerciseId.value);
-          <h2>{{ entry.controls.exerciseName.value }}</h2>
-          <p class="muted">
-            Objetivo: {{ entry.controls.targetSets.value }} series x {{ entry.controls.targetReps.value }}
-            - Descanso {{ entry.controls.restSeconds.value }} seg
-          </p>
-          <p class="muted">
-            Ultima vez: {{ stats.lastWeight ?? '-' }} kg x {{ stats.lastReps ?? '-' }} reps
-            - Mejor marca: {{ stats.bestWeight ?? '-' }} kg
-          </p>
-
-          <div formArrayName="entries">
-            <div [formGroupName]="i">
-              <div formArrayName="sets" class="sets-list">
-                @for (set of setsArray(i).controls; track set; let j = $index) {
-                  <div class="set-row" [formGroupName]="j">
-                    <h3>Serie {{ set.controls.setNumber.value }}</h3>
-                    <div class="set-grid">
-                      <label>
-                        Peso (kg)
-                        <input type="number" formControlName="weight" step="0.5" min="0" />
-                      </label>
-                      <label>
-                        Reps
-                        <input type="number" formControlName="reps" min="1" />
-                      </label>
-                      <label>
-                        RPE
-                        <input type="number" formControlName="rpe" min="1" max="10" />
-                      </label>
-                      <label>
-                        RIR
-                        <input type="number" formControlName="rir" min="0" max="10" />
-                      </label>
-                    </div>
-                    <label>
-                      Notas serie
-                      <input type="text" formControlName="notes" />
-                    </label>
-                    <div class="row-actions">
-                      <button type="button" class="btn btn-secondary" (click)="copyPreviousWeight(i, j)">
-                        <span class="material-symbol">content_copy</span>
-                        Copiar peso anterior
-                      </button>
-                      <button type="button" class="btn btn-danger" (click)="removeSet(i, j)">
-                        <span class="material-symbol">delete</span>
-                        Eliminar serie
-                      </button>
-                    </div>
-                  </div>
-                }
-              </div>
-
-              <div class="row-actions">
-                <button type="button" class="btn btn-secondary" (click)="addSet(i)">
-                  <span class="material-symbol">add</span>
-                  Anadir serie
-                </button>
-              </div>
-
-              <label>
-                Notas del ejercicio
-                <textarea rows="2" formControlName="notes"></textarea>
-              </label>
-            </div>
-          </div>
-        </article>
-      }
-
+  <form [formGroup]="form" class="workout-form">
+    @if (formMessage) {
       <section class="card">
-        <label>
-          Notas generales del entrenamiento
-          <textarea rows="3" formControlName="notes"></textarea>
-        </label>
+        <p class="message error">{{ formMessage }}</p>
       </section>
+    }
 
-      <section class="actions card">
-        <button type="submit" class="btn btn-primary" [disabled]="isSaving">
-          <span class="material-symbol">save</span>
-          {{ isSaving ? 'Guardando...' : 'Guardar entrenamiento' }}
-        </button>
-        <button type="button" class="btn btn-danger" (click)="cancelWorkout()">
-          <span class="material-symbol">close</span>
-          Cancelar entrenamiento
-        </button>
-      </section>
-    </form>
-  }
+    @for (entry of entriesArray.controls; track entry; let i = $index) {
+      <article class="card">
+        @let stats = getExercisePerformance(entry.controls.exerciseId.value);
+        <h2>{{ entry.controls.exerciseName.value }}</h2>
+        <p class="muted">
+          Objetivo: {{ entry.controls.targetSets.value }} series x {{ entry.controls.targetReps.value }}
+          - Descanso {{ entry.controls.restSeconds.value }} seg
+        </p>
+        <p class="muted">
+          Ultima vez: {{ stats.lastWeight ?? '-' }} kg x {{ stats.lastReps ?? '-' }} reps
+          - Mejor marca: {{ stats.bestWeight ?? '-' }} kg
+        </p>
+
+        <div formArrayName="entries">
+          <div [formGroupName]="i">
+            <div formArrayName="sets" class="sets-list">
+              @for (set of setsArray(i).controls; track set; let j = $index) {
+                <div class="set-row" [formGroupName]="j">
+                  <h3>Serie {{ set.controls.setNumber.value }}</h3>
+                  <div class="set-grid">
+                    <label>
+                      Peso (kg)
+                      <input type="number" formControlName="weight" step="0.5" min="0" />
+                    </label>
+                    <label>
+                      Reps
+                      <input type="number" formControlName="reps" min="1" />
+                    </label>
+                    <label>
+                      RPE
+                      <input type="number" formControlName="rpe" min="1" max="10" />
+                    </label>
+                    <label>
+                      RIR
+                      <input type="number" formControlName="rir" min="0" max="10" />
+                    </label>
+                  </div>
+                  <label>
+                    Notas serie
+                    <input type="text" formControlName="notes" />
+                  </label>
+                  <div class="row-actions">
+                    <button type="button" class="btn btn-secondary" (click)="copyPreviousWeight(i, j)">
+                      <span class="material-symbol">content_copy</span>
+                      Copiar peso anterior
+                    </button>
+                    <button type="button" class="btn btn-danger" (click)="removeSet(i, j)">
+                      <span class="material-symbol">delete</span>
+                      Eliminar serie
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="row-actions">
+              <button type="button" class="btn btn-secondary" (click)="addSet(i)">
+                <span class="material-symbol">add</span>
+                Anadir serie
+              </button>
+            </div>
+
+            <label>
+              Notas del ejercicio
+              <textarea rows="2" formControlName="notes"></textarea>
+            </label>
+          </div>
+        </div>
+      </article>
+    }
+
+    <section class="card">
+      <label>
+        Notas generales del entrenamiento
+        <textarea rows="3" formControlName="notes"></textarea>
+      </label>
+    </section>
+
+    <section class="actions card">
+      <button type="button" class="btn btn-secondary" [disabled]="isSavingProgress || isFinishing" (click)="saveProgress()">
+        <span class="material-symbol">save</span>
+        {{ isSavingProgress ? 'Guardando...' : 'Guardar progreso' }}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="isSavingProgress || isFinishing" (click)="finishWorkout()">
+        <span class="material-symbol">task_alt</span>
+        {{ isFinishing ? 'Finalizando...' : 'Finalizar entrenamiento' }}
+      </button>
+      <button type="button" class="btn btn-danger" [disabled]="isSavingProgress || isFinishing" (click)="exitWorkout()">
+        <span class="material-symbol">close</span>
+        Salir
+      </button>
+    </section>
+  </form>
 }

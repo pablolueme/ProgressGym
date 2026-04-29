@@ -2,14 +2,25 @@
   <section class="page-header">
     <p class="kicker">Analitica</p>
     <h1>Progreso</h1>
-    <p class="subtitle">Controla como evoluciona tu rendimiento y tus marcas clave.</p>
+    <p class="subtitle">Controla como evoluciona tu rendimiento con entrenamientos completados.</p>
+  </section>
+
+  <section class="card filter-card">
+    <label>
+      Periodo
+      <select [formControl]="rangeControl">
+        <option value="2W">Ultimas 2 semanas</option>
+        <option value="1M">Ultimo mes</option>
+        <option value="ALL">Todo</option>
+      </select>
+    </label>
   </section>
 
   <section class="stats-grid">
     <article class="stat-card">
       <span class="material-symbol">fitness_center</span>
       <h2>{{ vm.overview.totalWorkouts }}</h2>
-      <p>Total entrenamientos</p>
+      <p>Completados en el periodo</p>
     </article>
     <article class="stat-card">
       <span class="material-symbol">calendar_month</span>
@@ -26,7 +37,7 @@
   <section class="card">
     <div class="section-head">
       <h2>Ejercicios con registros</h2>
-      <p class="muted">Solo se muestran ejercicios que ya tienen historial.</p>
+      <p class="muted">Solo se muestran ejercicios con historial completado.</p>
     </div>
 
     @if (!vm.withData.length) {

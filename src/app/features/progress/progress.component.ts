@@ -1,19 +1,27 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
-import { map } from 'rxjs';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { map, startWith, switchMap } from 'rxjs';
 import { ProgressService } from '../../core/services/progress.service';
+import { WorkoutTimeRange } from '../../core/services/workout.service';
 
 @Component({
   selector: 'app-progress',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './progress.component.html',
   styleUrl: './progress.component.scss'
 })
 export class ProgressComponent {
   private readonly progressService = inject(ProgressService);
 
-  protected readonly vm$ = this.progressService.overview$.pipe(
+  protected readonly rangeControl = new FormControl<WorkoutTimeRange>('2W', {
+    nonNullable: true
+  });
+
+  protected readonly vm$ = this.rangeControl.valueChanges.pipe(
+    startWith(this.rangeControl.value),
+    switchMap((range) => this.progressService.getOverview$(range)),
     map((overview) => {
       const withData = overview.exerciseProgress
         .filter((item) => item.lastWeight != null || item.bestWeight != null || item.lastDate != null)
@@ -43,6 +51,7 @@ export class ProgressComponent {
       );
 
       return {
+        selectedRange: this.rangeControl.value,
         overview,
         withData,
         withoutData

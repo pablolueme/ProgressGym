@@ -3,6 +3,12 @@
   gap: 1rem;
 }
 
+.filter-card label {
+  display: grid;
+  gap: 0.35rem;
+  max-width: 280px;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

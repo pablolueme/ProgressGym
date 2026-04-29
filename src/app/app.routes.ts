@@ -88,6 +88,13 @@ export const routes: Routes = [
           )
       },
       {
+        path: 'workout/continue/:workoutId',
+        loadComponent: () =>
+          import('./features/workout/workout-start-page/workout-start-page.component').then(
+            (module) => module.WorkoutStartPageComponent
+          )
+      },
+      {
         path: 'history',
         loadComponent: () =>
           import('./features/history/history-page/history-page.component').then(

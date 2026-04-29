@@ -2,17 +2,17 @@ import { inject, Injectable } from '@angular/core';
 import { combineLatest, map, Observable } from 'rxjs';
 import { ProgressOverview } from '../models';
 import { ExerciseService } from './exercise.service';
-import { WorkoutService } from './workout.service';
+import { WorkoutService, WorkoutTimeRange } from './workout.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProgressService {
   private readonly workoutService = inject(WorkoutService);
   private readonly exerciseService = inject(ExerciseService);
 
-  readonly overview$: Observable<ProgressOverview> = combineLatest([
-    this.workoutService.workouts$,
-    this.exerciseService.exercises$
-  ]).pipe(
+  readonly overview$: Observable<ProgressOverview> = this.getOverview$('2W');
+
+  getOverview$(range: WorkoutTimeRange = '2W'): Observable<ProgressOverview> {
+    return combineLatest([this.workoutService.getCompletedWorkouts({ range }), this.exerciseService.exercises$]).pipe(
     map(([workouts, exercises]) => {
       const now = new Date();
       const startOfWeek = this.getStartOfWeek(now);
@@ -40,7 +40,8 @@ export class ProgressService {
         exerciseProgress
       };
     })
-  );
+    );
+  }
 
   private getStartOfWeek(date: Date): Date {
     const result = new Date(date);

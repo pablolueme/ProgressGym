@@ -1,7 +1,9 @@
+export type WorkoutStatus = 'IN_PROGRESS' | 'COMPLETED';
+
 export interface WorkoutSet {
   setNumber: number;
-  weight: number;
-  reps: number;
+  weight?: number;
+  reps?: number;
   rpe?: number;
   rir?: number;
   notes?: string;
@@ -21,8 +23,12 @@ export interface Workout {
   routineName: string;
   folderId?: string;
   date: Date;
+  startedAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+  lastSavedAt?: Date;
+  status: WorkoutStatus;
   entries: WorkoutEntry[];
   notes?: string;
   totalVolume?: number;
-  createdAt: Date;
 }

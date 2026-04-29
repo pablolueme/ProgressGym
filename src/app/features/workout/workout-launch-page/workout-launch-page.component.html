@@ -27,7 +27,12 @@
       @for (item of vm.routines; track item.routineId) {
         <article class="card routine-card">
           <div class="routine-head">
-            <h2>{{ item.routineName }}</h2>
+            <div class="routine-title-row">
+              <h2>{{ item.routineName }}</h2>
+              @if (item.inProgressWorkoutId) {
+                <span class="status-badge">En curso</span>
+              }
+            </div>
             <p class="muted">{{ item.routineDescription || 'Rutina lista para entrenar.' }}</p>
           </div>
 
@@ -55,10 +60,21 @@
               <span class="material-symbol">visibility</span>
               Abrir
             </a>
-            <a [routerLink]="['/app/workout/start', item.routineId]" class="btn btn-primary cta-btn">
-              <span class="material-symbol">play_arrow</span>
-              Iniciar entrenamiento
-            </a>
+            @if (item.inProgressWorkoutId) {
+              <button type="button" class="btn btn-secondary cta-btn" (click)="continueWorkout(item.inProgressWorkoutId)">
+                <span class="material-symbol">resume</span>
+                Continuar
+              </button>
+              <button type="button" class="btn btn-primary cta-btn" (click)="startNewWorkout(item.routineId)">
+                <span class="material-symbol">play_arrow</span>
+                Empezar nuevo
+              </button>
+            } @else {
+              <button type="button" class="btn btn-primary cta-btn" (click)="startOrContinueWorkout(item)">
+                <span class="material-symbol">play_arrow</span>
+                Iniciar entrenamiento
+              </button>
+            }
           </div>
         </article>
       }

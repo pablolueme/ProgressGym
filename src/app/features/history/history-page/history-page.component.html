@@ -1,20 +1,58 @@
 <section class="page-header">
   <h1>Historial</h1>
-  <p class="muted">Entrenamientos guardados, ordenados por fecha.</p>
+  <p class="muted">Entrenamientos completados y sesiones en curso.</p>
+  <p class="muted helper-text">
+    El historial conserva automaticamente los entrenamientos recientes. Los registros antiguos de mas de
+    2 semanas se eliminan para evitar acumulacion.
+  </p>
 </section>
 
-<section class="history-list">
-  @if (workouts$ | async; as workouts) {
-    @if (!workouts.length) {
+<section class="card filter-card">
+  <label>
+    Periodo
+    <select [formControl]="rangeControl">
+      <option value="2W">Ultimas 2 semanas</option>
+      <option value="1M">Ultimo mes</option>
+      <option value="ALL">Todo</option>
+    </select>
+  </label>
+</section>
+
+@if (vm$ | async; as vm) {
+  @if (vm.inProgressWorkouts.length) {
+    <section class="history-list">
+      <h2>Entrenamientos en curso</h2>
+      @for (workout of vm.inProgressWorkouts; track workout.id) {
+        <article class="card workout-card in-progress">
+          <div>
+            <h3>{{ workout.routineName }}</h3>
+            <p class="muted">Inicio: {{ workout.startedAt | date: 'short' }}</p>
+            <p class="muted">
+              Ultimo guardado: {{ (workout.lastSavedAt || workout.updatedAt) | date: 'short' }}
+            </p>
+          </div>
+          <a [routerLink]="['/app/workout/continue', workout.id]" class="btn btn-primary">Continuar</a>
+        </article>
+      }
+    </section>
+  }
+
+  <section class="history-list">
+    <h2>Entrenamientos completados</h2>
+    @if (!vm.completedWorkouts.length) {
       <article class="card">
-        <p class="muted">No hay entrenamientos registrados todavia.</p>
+        <p class="muted">No tienes entrenamientos recientes en el historial.</p>
+        <a routerLink="/app/workout" class="btn btn-primary">
+          <span class="material-symbol">play_arrow</span>
+          Registrar entrenamiento
+        </a>
       </article>
     } @else {
-      @for (workout of workouts; track workout.id) {
+      @for (workout of vm.completedWorkouts; track workout.id) {
         <article class="card workout-card">
           <div>
-            <h2>{{ workout.routineName }}</h2>
-            <p class="muted">{{ workout.date | date: 'fullDate' }}</p>
+            <h3>{{ workout.routineName }}</h3>
+            <p class="muted">{{ (workout.completedAt || workout.date) | date: 'fullDate' }}</p>
             <p class="muted">
               Ejercicios: {{ workout.entries.length }} · Volumen: {{ workout.totalVolume || 0 | number: '1.0-0' }}
             </p>
@@ -26,5 +64,5 @@
         </article>
       }
     }
-  }
-</section>
+  </section>
+}

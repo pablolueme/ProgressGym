@@ -33,12 +33,14 @@ export class HomeComponent {
   protected readonly vm$ = combineLatest([
     this.userProfileService.profile$,
     this.progressService.overview$,
-    this.workoutService.workouts$,
+    this.workoutService.getCompletedWorkouts({ range: '2W' }),
+    this.workoutService.getInProgressWorkouts(),
     this.folderService.folders$,
     this.routineService.routines$
   ]).pipe(
-    map(([profile, overview, workouts, folders, routines]) => {
-      const lastWorkout = workouts[0] ?? null;
+    map(([profile, overview, completedWorkouts, inProgressWorkouts, folders, routines]) => {
+      const lastWorkout = completedWorkouts[0] ?? null;
+      const activeWorkout = inProgressWorkouts[0] ?? null;
       const recentExercises =
         lastWorkout?.entries
           .slice(0, 5)
@@ -65,7 +67,7 @@ export class HomeComponent {
           title: 'Registra un entrenamiento',
           description: 'Empieza a construir historial para ver progreso real.',
           route: '/app/workout',
-          done: overview.totalWorkouts > 0
+          done: completedWorkouts.length > 0
         }
       ];
 
@@ -74,6 +76,7 @@ export class HomeComponent {
         overview,
         foldersCount: folders.length,
         routinesCount: routines.length,
+        activeWorkout,
         lastWorkout,
         recentExercises,
         onboardingSteps,

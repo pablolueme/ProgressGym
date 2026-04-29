@@ -14,7 +14,7 @@
       </span>
       <span class="meta-pill">
         <span class="material-symbol">fitness_center</span>
-        {{ vm.overview.totalWorkouts }} entrenamientos
+        {{ vm.overview.totalWorkouts }} entrenos (2 semanas)
       </span>
     </div>
   </section>
@@ -23,7 +23,7 @@
     <article class="stat-card">
       <span class="material-symbol stat-icon">fitness_center</span>
       <h2>{{ vm.overview.totalWorkouts }}</h2>
-      <p>Total entrenamientos</p>
+      <p>Completados (2 semanas)</p>
     </article>
     <article class="stat-card">
       <span class="material-symbol stat-icon">calendar_month</span>
@@ -36,6 +36,27 @@
       <p>Volumen medio</p>
     </article>
   </section>
+
+  @if (vm.activeWorkout) {
+    <section class="card in-progress-card">
+      <div class="section-head">
+        <h3>Entrenamiento en curso</h3>
+        <p class="muted">Puedes continuar esta sesion cuando quieras.</p>
+      </div>
+      <div class="workout-main">
+        <h4>{{ vm.activeWorkout.routineName }}</h4>
+        <p class="muted">Inicio: {{ vm.activeWorkout.startedAt | date: 'short' }}</p>
+        <p class="muted">
+          Ultimo guardado:
+          {{ (vm.activeWorkout.lastSavedAt || vm.activeWorkout.updatedAt) | date: 'short' }}
+        </p>
+        <a [routerLink]="['/app/workout/continue', vm.activeWorkout.id]" class="btn btn-primary">
+          <span class="material-symbol">resume</span>
+          Continuar entrenamiento
+        </a>
+      </div>
+    </section>
+  }
 
   @if (vm.hasOnboardingPending) {
     <section class="card">
@@ -93,10 +114,10 @@
       } @else {
         <div class="empty-state">
           <span class="material-symbol">hourglass_empty</span>
-          <p class="muted">Todavia no has guardado entrenamientos. Empieza hoy y construye tu historial.</p>
+          <p class="muted">No hay entrenamientos completados en las ultimas 2 semanas.</p>
           <a routerLink="/app/workout" class="btn btn-primary">
             <span class="material-symbol">play_arrow</span>
-            Iniciar primer entrenamiento
+            Registrar entrenamiento
           </a>
         </div>
       }

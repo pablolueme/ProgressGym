@@ -54,7 +54,7 @@ export class ExercisesPageComponent {
 
   protected readonly vm$ = combineLatest([
     this.exerciseService.exercises$,
-    this.workoutService.workouts$,
+    this.workoutService.getCompletedWorkouts({ range: 'ALL' }),
     this.filterForm.valueChanges.pipe(startWith(this.filterForm.getRawValue()))
   ]).pipe(
     map(([exercises, workouts, filters]) => {
